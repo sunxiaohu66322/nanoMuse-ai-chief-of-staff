@@ -1,0 +1,292 @@
+{
+  "log": [
+    {
+      "at": "2026-11-10T17:37:36.916Z",
+      "k": "step1_load",
+      "v": {
+        "title": "nanoMuse AI 私人总管 · 统一工作台",
+        "url": "http://127.0.0.1:9196/",
+        "h1": "◈ nanoMuse AI 私人总管",
+        "nProj": 9,
+        "modules": [
+          "▦ 项目总览",
+          "◈ AI 对话",
+          "▤ 甘特图",
+          "⚑ 待审批 6",
+          "≡ 执行日志",
+          "◉ 主动提醒"
+        ],
+        "aiStat": "检测中"
+      }
+    },
+    {
+      "at": "2026-11-10T17:37:37.468Z",
+      "k": "step2_input",
+      "v": {
+        "text": "目前哪个项目最需要推进",
+        "beforeCnt": 20
+      }
+    },
+    {
+      "at": "2026-11-10T17:37:49.634Z",
+      "k": "step2_ai_query",
+      "v": {
+        "aiReplyLen": 581,
+        "namedRealProjects": [
+          "DSH 项目导航系统",
+          "上货台",
+          "换脸与人脸资产系统"
+        ],
+        "leakage": false,
+        "replyHead": "结论不变：DSH 项目导航系统（p-b0e5dcc0）仍是最需要推进的，但真正的堵点在你手里——审批卡 #4 和 8 条 P0 待决策，全部无人拍板。\n\n依据（与上两次盘点完全一致，无进展）：\n- DSH：待人工决策｜97.7%｜P0｜阻塞 10 条（全场最多）｜待决策 4 条｜P0 最小改造已本机验收（21/21，可复核），就差决策收口。\n- 上货台（59.7%，阻塞 3、待决策 2）、抖音知识库采集（48.5%，阻塞 3、待决策 2",
+        "chatCount": 22
+      }
+    },
+    {
+      "at": "2026-11-10T17:38:24.068Z",
+      "k": "step3_dsh_handoff",
+      "v": {
+        "newRuns": [
+          {
+            "id": 11,
+            "outcome": "succeeded",
+            "session": "session-07ca161b-b1dc-40ac-b91a-200bcbd5737e",
+            "detail": "聊天指令：帮我推进换脸系统的低风险任务，做一次只读复核｜产物 自动复核-p-821a9073-20261111-013822.md｜校验=True｜会话=session-07ca161b-b1dc-40ac-b91a-200bcbd5737e｜原会话不可续（a"
+          }
+        ],
+        "newDsh": [
+          {
+            "id": 11,
+            "session": "session-07ca161b-b1dc-40ac-b91a-200bcbd5737e",
+            "outcome": "succeeded",
+            "text": "①已完成：无。状态为 stalled、进度 0.0%，无任何交付产物或已验证步骤。\n②阻塞：项目下一步为空、无明确任务定义与启动动作，处于停滞待定义状态。\n③下一步：读取项目 p-821a9073 的"
+          }
+        ],
+        "action": {
+          "id": 6,
+          "status": "succeeded",
+          "checked": 1,
+          "output": "G:\\Users\\Administrator\\Documents\\deepseek-harness\\default-workspace\\nanoMuse项目总管\\data\\自动复核-p-821a9073-20261111-013822.md (961 bytes)"
+        },
+        "replyMentionsDsh": true
+      }
+    },
+    {
+      "at": "2026-11-10T17:38:24.230Z",
+      "k": "step3_artifact_readback",
+      "v": {
+        "exists": true,
+        "bytes": 961,
+        "head": "# DSH 原会话只读复核 · 换脸与人脸资产系统\r\n\r\n触发：聊天指令：帮我推进换脸系统的低风险任务，做一次只读复核\r\n时间：2026-11-11T01:38:22+08:00\r\nDSH 会话：session-07ca161b-b1dc-40ac-b91a-200bcbd5737e\r\n续接原会话：是\r\n会话结果：su"
+      }
+    },
+    {
+      "at": "2026-11-10T17:38:24.632Z",
+      "k": "step3_after_reload",
+      "v": {
+        "chatCountAfterReload": 24,
+        "lastReplyPersisted": true,
+        "actionStill": {
+          "status": "succeeded",
+          "checked": 1
+        }
+      }
+    },
+    {
+      "at": "2026-11-10T17:38:26.248Z",
+      "k": "step4_gantt",
+      "v": {
+        "barsRendered": 36,
+        "gMeta": "9 项目 · 有真实日期 36 条 · 待排期 31 条 · 11-11T01:38:24",
+        "scheduled": 36,
+        "unscheduled": 31,
+        "unschedRowsInDom": 32,
+        "detailFromClick": "条目\nDSH 项目导航系统 · 实际观察窗口\n所属项目\nDSH 项目导航系统\n项目真实状态\n待决策\n项目进度\n97.7%\n时间\t2026-11-10 → 2026-11-11\n本条完成度\t98%（项目）\n依赖\t无\n日期来源\tsnapshots 首/末真实时间戳（87 条），非计划日期\n项目下一步\tP0 最小改造已通过本机验收（21/21，可复核）：P0-A 工作回执通道（报.py --receipt + /api/receipt，只写 ",
+        "targetProject": "DSH 项目导航系统",
+        "detailH2": "DSH 项目导航系统 待决策",
+        "consistent": true
+      }
+    },
+    {
+      "at": "2026-11-10T17:38:35.542Z",
+      "k": "step5_approval_gate",
+      "v": {
+        "pendingBefore": 6,
+        "pendingAfter": 6,
+        "newHighRiskApprovals": [
+          {
+            "id": 4,
+            "title": "请批准：请把这个方案发布上线并覆盖生产配置"
+          }
+        ],
+        "approvalLinkedInChat": true,
+        "approvalEvents": 4,
+        "replySaysStopped": true,
+        "noExecutionTriggered": true,
+        "note": "同标题审批幂等去重：重复高风险指令复用已有待批卡，pending 总数不增加属正确行为"
+      }
+    },
+    {
+      "at": "2026-11-10T17:38:36.287Z",
+      "k": "step6_before",
+      "v": {
+        "lastPatrol": "2026-11-11T01:37:52+08:00",
+        "patrolSeconds": 60,
+        "autoRuns": 11
+      }
+    },
+    {
+      "at": "2026-11-10T17:38:36.370Z",
+      "k": "step6_wait",
+      "v": "纯被动等待后台 daemon（74000ms），期间不发任何用户指令、不调 /api/patrol、不调 /api/auto-runs/trigger"
+    },
+    {
+      "at": "2026-11-10T17:39:50.447Z",
+      "k": "step6_after",
+      "v": {
+        "lastPatrolBefore": "2026-11-11T01:37:52+08:00",
+        "lastPatrolAfter": "2026-11-11T01:39:01+08:00",
+        "changedWithoutUserCommand": true,
+        "newAutoPatrolEvents": 2,
+        "autoRunsTotal": 11,
+        "patrolTriggerAutoRuns": 7,
+        "notificationsTotal": 30
+      }
+    },
+    {
+      "at": "2026-11-10T17:39:50.718Z",
+      "k": "step7_before_restart",
+      "v": {
+        "chat": 26,
+        "projects": 9,
+        "auto": 11,
+        "approvals": 6,
+        "tasksDone": 0
+      }
+    },
+    {
+      "at": "2026-11-10T17:39:54.786Z",
+      "k": "step7_restart_cmd",
+      "v": "NEWPID=42904"
+    },
+    {
+      "at": "2026-11-10T17:40:01.808Z",
+      "k": "step7_restart_window_noise",
+      "v": {
+        "expected": "kill→拉起期间轮询必然断连，如实记录但不计入恢复后运行错误",
+        "hooked": [],
+        "console": [
+          "console.error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+          "console.error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+          "console.error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+          "console.error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+          "console.error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+          "console.error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+          "console.error: state load TypeError: Failed to fetch\n    at api (http://127.0.0.1:9196/:306:26)\n    at load (http://127.0.0.1:9196/:406:24)",
+          "console.error: Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        ]
+      }
+    },
+    {
+      "at": "2026-11-10T17:40:07.904Z",
+      "k": "step7_after_restart",
+      "v": {
+        "chat": 26,
+        "projects": 9,
+        "auto": 11,
+        "approvals": 6,
+        "tasksDone": 0,
+        "persisted": true
+      }
+    },
+    {
+      "at": "2026-11-10T17:40:08.221Z",
+      "k": "step8_console",
+      "v": {
+        "pageHookedErrors": [],
+        "consoleErrors": [],
+        "failed404Urls": [],
+        "failed404Note": "外部 9195 日志面板 iframe 资源 / favicon，非 9196 本页 JS 错误；如实记录不掩饰",
+        "httpErrorEvents": [],
+        "historicalErrorsExcluded": [
+          {
+            "at": "2026-11-11T01:36:53+08:00",
+            "kind": "http.error",
+            "message": "GET /api/chat/status: [WinError 10053] 你的主机中的软件中止了一个已建立的连接。"
+          },
+          {
+            "at": "2026-11-11T01:30:11+08:00",
+            "kind": "http.error",
+            "message": "GET /api/chat/status: [WinError 10053] 你的主机中的软件中止了一个已建立的连接。"
+          }
+        ],
+        "windowNote": "判据=重启完成并 reload 后的稳定窗口；kill→拉起之间的断连已单独记录",
+        "logTailLines": 60,
+        "cards": 9,
+        "readyState": "complete"
+      }
+    },
+    {
+      "at": "2026-11-10T17:40:08.221Z",
+      "k": "VERDICT",
+      "v": {
+        "pass": {
+          "1": true,
+          "2": true,
+          "3": true,
+          "4": true,
+          "5": true,
+          "6": true,
+          "7": true,
+          "8": true
+        },
+        "allPassed": true,
+        "url": "http://127.0.0.1:9196/",
+        "browser": "Playwright Chromium 1243 真实浏览器（本机已装，headless CDP）",
+        "executable": "F:\\Users\\Administrator\\AppData\\Local\\ms-playwright\\chromium-1243\\chrome-win64\\chrome.exe",
+        "screenshots": [
+          "v2-01-统一工作台首页.png",
+          "v2-02-AI对话-最需要推进.png",
+          "v2-03-对话调度DSH真执行.png",
+          "v2-04-刷新后对话与状态保持.png",
+          "v2-05-甘特图与点击详情.png",
+          "v2-06-高风险拦截与审批.png",
+          "v2-07-待审批事项列表.png",
+          "v2-08-等待自动巡检前.png",
+          "v2-09-定时自动巡检后.png",
+          "v2-10-重启后恢复.png"
+        ],
+        "at": "2026-11-10T17:40:08.221Z"
+      }
+    }
+  ],
+  "verdict": {
+    "pass": {
+      "1": true,
+      "2": true,
+      "3": true,
+      "4": true,
+      "5": true,
+      "6": true,
+      "7": true,
+      "8": true
+    },
+    "allPassed": true,
+    "url": "http://127.0.0.1:9196/",
+    "browser": "Playwright Chromium 1243 真实浏览器（本机已装，headless CDP）",
+    "executable": "F:\\Users\\Administrator\\AppData\\Local\\ms-playwright\\chromium-1243\\chrome-win64\\chrome.exe",
+    "screenshots": [
+      "v2-01-统一工作台首页.png",
+      "v2-02-AI对话-最需要推进.png",
+      "v2-03-对话调度DSH真执行.png",
+      "v2-04-刷新后对话与状态保持.png",
+      "v2-05-甘特图与点击详情.png",
+      "v2-06-高风险拦截与审批.png",
+      "v2-07-待审批事项列表.png",
+      "v2-08-等待自动巡检前.png",
+      "v2-09-定时自动巡检后.png",
+      "v2-10-重启后恢复.png"
+    ],
+    "at": "2026-11-10T17:40:08.221Z"
+  }
+}

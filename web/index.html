@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>nanoMuse AI 私人总管 · 统一工作台</title>
+<link rel="stylesheet" href="/static/frappe-gantt.css">
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--line:#2a3340;--txt:#e6edf3;--dim:#8b949e;
+--green:#3fb950;--red:#f85149;--amber:#d29922;--blue:#58a6ff;--purple:#bc8cff;--accent:#39d0d8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.6 "Segoe UI","Microsoft YaHei",sans-serif}
+a{color:var(--blue)}button{font-family:inherit;cursor:pointer}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+header h1{font-size:16px;margin:0;letter-spacing:.3px;white-space:nowrap}header h1 span{color:var(--accent)}
+.pill{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:3px 10px;font-size:11.5px;color:var(--dim);white-space:nowrap}
+.pill b{color:var(--txt)} .live{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:bl 2s infinite}
+@keyframes bl{50%{opacity:.35}}
+.wrap{display:grid;grid-template-columns:320px 1fr;gap:14px;padding:14px;max-width:1780px;margin:0 auto}
+aside,section,.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tabs{display:flex;gap:4px;padding:9px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tab{padding:4px 9px;border-radius:6px;background:transparent;border:1px solid transparent;color:var(--dim);font-size:12px}
+.tab.on{background:var(--panel2);border-color:var(--line);color:var(--txt)}.tab b{color:var(--accent)}
+.list{max-height:calc(100vh - 200px);overflow:auto}
+.card{padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;transition:.15s}
+.card:hover{background:var(--panel2)}.card.sel{background:#182634;border-left:3px solid var(--accent)}
+.card .t{font-weight:600;font-size:13px;display:flex;justify-content:space-between;gap:8px}
+.card .m{font-size:11.5px;color:var(--dim);margin-top:3px}
+.badge{font-size:10.5px;padding:1px 7px;border-radius:10px;white-space:nowrap;font-weight:600}
+.s-active{background:#12331d;color:var(--green);border:1px solid #1f5a2e}
+.s-stalled{background:#3b1717;color:var(--red);border:1px solid #6b2424}
+.s-awaiting_decision{background:#3a2a0c;color:var(--amber);border:1px solid #6a4d13}
+.s-pending_acceptance{background:#152a42;color:var(--blue);border:1px solid #244a70}
+.bar{height:5px;background:#222b36;border-radius:3px;margin-top:7px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--blue))}
+.detail{padding:14px 16px}.detail h2{margin:0 0 4px;font-size:19px}.detail .sub{color:var(--dim);font-size:12px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-bottom:12px}
+.kv{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.kv .k{font-size:11px;color:var(--dim)}.kv .v{font-size:14px;font-weight:600;margin-top:2px}
+h3{font-size:12.5px;margin:14px 0 7px;color:var(--accent);letter-spacing:.4px;border-bottom:1px solid var(--line);padding-bottom:5px}
+ul.ev{margin:0;padding-left:18px;font-size:12px;color:#c9d1d9}ul.ev li{margin:3px 0}
+pre{background:#0b0f14;border:1px solid var(--line);border-radius:7px;padding:9px;overflow:auto;font-size:11.5px;color:#b8c4d0;max-height:180px;margin:0;white-space:pre-wrap}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:5px 7px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--dim);font-weight:500}.mono{font-family:Consolas,monospace;font-size:11px;color:var(--dim)}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 10px;font-size:12px}
+.btn:hover{border-color:var(--accent)}.btn.pri{background:#10352f;border-color:#1d6a5c;color:#7ff0dc}
+.btn.warn{background:#3a2a0c;border-color:#6a4d13;color:#ffd479}.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.task{display:flex;gap:9px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line);font-size:12px}
+.task .st{font-size:11px;padding:1px 7px;border-radius:9px;background:#12331d;color:var(--green);white-space:nowrap}
+.task .st.pending{background:#2a3340;color:var(--dim)}.task .st.failed{background:#3b1717;color:var(--red)}
+.notice{background:#2b2110;border:1px solid #5c4415;border-radius:7px;padding:7px 10px;font-size:12px;margin:5px 0}
+.empty{color:var(--dim);font-size:12px;padding:10px 2px}
+footer{padding:9px 18px;color:var(--dim);font-size:11px;border-top:1px solid var(--line);margin-top:14px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:1080px){.wrap{grid-template-columns:1fr}.split{grid-template-columns:1fr}.list{max-height:280px}}
+/* 模块导航 */
+.modbar{display:flex;gap:5px;padding:9px 14px;background:#10161e;border-bottom:1px solid var(--line);flex-wrap:wrap;max-width:1780px;margin:0 auto}
+.mod{padding:6px 14px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--dim);font-size:12.5px}
+.mod.on{background:#10352f;border-color:#1d6a5c;color:#7ff0dc;font-weight:600}
+.mod b{color:var(--amber);font-size:11px}
+.view{display:none}.view.on{display:block}
+/* AI 对话 */
+.chatwrap{display:grid;grid-template-columns:1fr 300px;gap:14px;max-width:1780px;margin:0 auto;padding:14px}
+@media(max-width:1080px){.chatwrap{grid-template-columns:1fr}}
+#chatlog{height:min(58vh,560px);overflow:auto;padding:14px;background:#0b0f14}
+.msg{margin:0 0 12px;max-width:88%}
+.msg.user{margin-left:auto;background:#123526;border:1px solid #1d6a5c;border-radius:10px 10px 3px 10px;padding:8px 12px}
+.msg.ai{background:var(--panel2);border:1px solid var(--line);border-radius:10px 10px 10px 3px;padding:9px 12px}
+.msg .who{font-size:10.5px;color:var(--dim);margin-bottom:3px}
+.msg .body{font-size:13px;white-space:pre-wrap;word-break:break-word;line-height:1.65}
+.msg .body strong{color:#7ff0dc}.msg .body code{background:#0b0f14;padding:1px 5px;border-radius:4px;color:#ffd479}
+.chatbar{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+#chatInput{flex:1;background:#0b0f14;border:1px solid var(--line);border-radius:7px;color:var(--txt);padding:9px 11px;font-size:13px;resize:vertical;min-height:42px;max-height:130px}
+#chatSend{background:#10352f;border:1px solid #1d6a5c;color:#7ff0dc;border-radius:7px;padding:0 18px;font-weight:600}
+.quick{display:flex;gap:6px;flex-wrap:wrap;padding:8px 10px;border-top:1px solid var(--line)}
+.quick .btn{font-size:11.5px;padding:3px 9px}
+/* 甘特 */
+#ganttBox{background:#fff;color:#111;border-radius:8px;overflow:auto;padding:6px;max-height:64vh}
+#ganttBox .g-stalled .bar-wrapper .bar{background:#f85149!important}
+#ganttBox .g-awaiting_decision .bar-wrapper .bar{background:#d29922!important}
+#ganttBox .g-active .bar-wrapper .bar{background:#3fb950!important}
+#ganttBox .g-pending_acceptance .bar-wrapper .bar{background:#58a6ff!important}
+.gantt .bar-label{font-size:11px!important}
+#ganttDetail,#ganttUnsched{font-size:11px;color:#c9d1d9}
+#logpanel{position:fixed;right:12px;bottom:12px;width:430px;height:250px;border:1px solid var(--line);border-radius:9px;background:#0b0f14;z-index:30;display:none;box-shadow:0 8px 30px #0008}
+#logpanel iframe{width:100%;height:100%;border:0;border-radius:9px}
+#logbtn{position:fixed;right:14px;bottom:14px;z-index:31;background:#10352f;border:1px solid #1d6a5c;color:#7ff0dc;border-radius:20px;padding:7px 14px;font-size:12px}
+#toast{position:fixed;top:64px;right:18px;z-index:40;background:#12331d;border:1px solid #1f5a2e;color:#a7f3b5;padding:9px 14px;border-radius:8px;font-size:12px;display:none;max-width:420px}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>◈ nanoMuse</span> AI 私人总管</h1>
+  <div class="pill"><span class="live"></span>持续运行 · 巡检 <b id="patrolS">—</b>s</div>
+  <div class="pill">上次巡检 <b id="lastPatrol">—</b></div>
+  <div class="pill">项目 <b id="nProj">—</b></div>
+  <div class="pill">停滞 <b id="nStall" style="color:var(--red)">—</b></div>
+  <div class="pill">待决策 <b id="nDec" style="color:var(--amber)">—</b></div>
+  <div class="pill">待审批 <b id="nAppr" style="color:var(--amber)">—</b></div>
+  <div class="pill">AI <b id="aiStat">检测中</b></div>
+  <button class="btn pri" onclick="doPatrol()">立即巡检</button>
+  <button class="btn" onclick="triggerAuto()">主动推进</button>
+  <button class="btn" onclick="toggleLog()">日志</button>
+</header>
+
+<div class="modbar" id="modbar">
+  <button class="mod on" data-v="overview" onclick="setView('overview')">▦ 项目总览</button>
+  <button class="mod" data-v="chat" onclick="setView('chat')">◈ AI 对话</button>
+  <button class="mod" data-v="gantt" onclick="setView('gantt')">▤ 甘特图</button>
+  <button class="mod" data-v="approval" onclick="setView('approval')">⚑ 待审批 <b id="mAppr">0</b></button>
+  <button class="mod" data-v="logs" onclick="setView('logs')">≡ 执行日志</button>
+  <button class="mod" data-v="notice" onclick="setView('notice')">◉ 主动提醒</button>
+</div>
+
+<!-- ========== 项目总览（沿用上轮全部功能） ========== -->
+<div class="view on" id="v-overview">
+ <div class="wrap">
+  <aside>
+    <div class="tabs" id="tabs"></div>
+    <div class="list" id="list"></div>
+    <div style="padding:10px;border-top:1px solid var(--line);font-size:11px;color:var(--dim)">
+      自动发现：9180 项目导航 · 9134 任务图谱 · DSH 会话真源 · Host 任务看板。分类由证据判定，无须人工重命名。
+    </div>
+  </aside>
+  <section><div class="detail" id="detail"><div class="empty">选择左侧项目查看详情</div></div></section>
+ </div>
+ <div class="wrap" style="padding-top:0">
+  <section class="detail">
+    <h3>通知与异常提醒（主动推送，含 Windows 本机通知）</h3>
+    <div id="notices" style="max-height:200px;overflow:auto"></div>
+    <h3>人工审批闸门（方向变更 / 覆盖 / 删除 / 发布 / 付费一律不自动执行）</h3>
+    <div id="approvals" style="max-height:180px;overflow:auto"></div>
+  </section>
+  <section class="detail">
+    <h3>低风险主动推进 · 执行记录（真执行 + 产物回读校验）</h3>
+    <div id="actions" style="max-height:210px;overflow:auto"></div>
+    <h3>系统事件（机读事件轨）</h3>
+    <div id="events" style="max-height:180px;overflow:auto"></div>
+  </section>
+ </div>
+</div>
+
+<!-- ========== AI 对话 ========== -->
+<div class="view" id="v-chat">
+ <div class="chatwrap">
+  <section class="box">
+    <div style="padding:9px 13px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim)">
+      <b style="color:var(--accent)">AI 私人总管</b> · 长期记忆来自 <span class="mono">data/state.db</span> 真实项目数据 ·
+      对话持久化 · 可调度 <b>DSH 原会话</b> 真执行并回读校验 · 重大动作自动停手生成审批
+    </div>
+    <div id="chatlog"><div class="empty">正在载入对话历史…</div></div>
+    <div class="quick">
+      <button class="btn" onclick="quick('目前哪个项目最需要推进')">目前哪个项目最需要推进</button>
+      <button class="btn" onclick="quick('列出全部项目进度和阻塞')">列出全部项目进度和阻塞</button>
+      <button class="btn" onclick="quick('帮我推进换脸系统的低风险任务')">推进换脸系统低风险任务</button>
+      <button class="btn" onclick="quick('请把这个方案发布上线并覆盖生产配置')">模拟高风险动作</button>
+    </div>
+    <div class="chatbar">
+      <textarea id="chatInput" placeholder="问项目状态、要优先级建议、或让我真调度 DSH 接续执行…（Enter 发送 / Shift+Enter 换行）"></textarea>
+      <button id="chatSend" onclick="sendChat()">发送</button>
+    </div>
+  </section>
+  <aside class="box detail">
+    <h3>本次对话上下文（真实 DB 摘要）</h3>
+    <div id="ctxBox" class="mono" style="max-height:230px;overflow:auto;font-size:11px;line-height:1.55">—</div>
+    <h3>最近 DSH 真会话</h3>
+    <div id="dshBox" style="max-height:210px;overflow:auto"><div class="empty">—</div></div>
+    <h3>主动闭环记录</h3>
+    <div id="autoBox" style="max-height:180px;overflow:auto"><div class="empty">—</div></div>
+    <div class="row"><button class="btn" onclick="loadChat()">刷新对话</button><button class="btn" onclick="loadAuto()">刷新执行记录</button></div>
+  </aside>
+ </div>
+</div>
+
+<!-- ========== 甘特图 ========== -->
+<div class="view" id="v-gantt">
+ <div class="wrap" style="grid-template-columns:1fr">
+  <section class="detail">
+    <div class="row">
+      <h3 style="margin:0;border:0;padding:0">项目 · 里程碑 · 任务时间线（frappe-gantt 1.2.2 · MIT）</h3>
+      <button class="btn" onclick="loadGantt(true)">重建并同步 SQLite</button>
+      <span class="mono" id="gMeta">—</span>
+    </div>
+    <div style="font-size:12px;color:var(--dim);margin:6px 0 10px">
+      所有日期来自 <b>state.db 真实时间戳</b>（快照首/末、任务状态变更）。9180 路线图未提供计划日期的里程碑一律显示「待排期」，不编造时间与完成率。
+      点击任意条可查看真实项目详情。
+    </div>
+    <div id="ganttBox"><div class="empty" style="color:#333">甘特图载入中…</div></div>
+    <h3>点击详情</h3><div id="ganttDetail"><div class="empty">点击上方任意任务条查看真实状态与来源</div></div>
+    <h3>待排期（真实无日期，共 <span id="gUnschedN">0</span> 条）</h3>
+    <div id="ganttUnsched" style="max-height:200px;overflow:auto"></div>
+  </section>
+ </div>
+</div>
+
+<!-- ========== 待审批 ========== -->
+<div class="view" id="v-approval">
+ <div class="wrap" style="grid-template-columns:1fr">
+  <section class="detail">
+    <h3>人工审批闸门 · 所有待决事项</h3>
+    <div id="allApprovals"></div>
+    <div style="font-size:12px;color:var(--dim);margin-top:10px">
+      重大动作（方向变更 / 覆盖 / 删除 / 发布 / 付费）由 AI 主动停手并登记，系统永不自动执行。审批记录持久化，重启后仍在。
+    </div>
+  </section>
+ </div>
+</div>
+
+<!-- ========== 执行日志 ========== -->
+<div class="view" id="v-logs">
+ <div class="wrap" style="grid-template-columns:1fr">
+  <section class="detail">
+    <h3>动作执行记录（真执行 + 回读校验）</h3><div id="logActions" style="max-height:250px;overflow:auto"></div>
+    <h3>主动闭环 / DSH 会话回执</h3><div id="logAuto" style="max-height:250px;overflow:auto"></div>
+    <h3>系统事件</h3><div id="logEvents" style="max-height:230px;overflow:auto"></div>
+    <h3>服务日志（9195 双轨面板）</h3>
+    <div style="margin-top:6px"><iframe src="http://127.0.0.1:9195/?embed=1&project=nanoMuse%E9%A1%B9%E7%9B%AE%E6%80%BB%E7%AE%A1" style="width:100%;height:260px;border:1px solid var(--line);border-radius:8px"></iframe></div>
+  </section>
+ </div>
+</div>
+
+<!-- ========== 主动提醒 ========== -->
+<div class="view" id="v-notice">
+ <div class="wrap" style="grid-template-columns:1fr">
+  <section class="detail">
+    <h3>主动提醒（60s 无人指令自动巡检 + 主动推进）</h3>
+    <div id="allNotices"></div>
+  </section>
+ </div>
+</div>
+
+<footer>
+  持久化 <span class="mono">data/state.db（SQLite，重启恢复）</span> · 服务时间 <span id="srvtime">—</span> ·
+  自动刷新 5s · 页面/JS 异常上报 <span class="mono">/api/log/page</span> ·
+  <a href="http://127.0.0.1:9195/?embed=1&amp;project=nanoMuse%E9%A1%B9%E7%9B%AE%E6%80%BB%E7%AE%A1" target="_blank">9195 日志面板</a> ·
+  仅本机访问 127.0.0.1:9196
+</footer>
+
+<button id="logbtn" onclick="toggleLog()">▤ 双轨日志</button>
+<div id="logpanel"><iframe src="http://127.0.0.1:9195/?embed=1&project=nanoMuse%E9%A1%B9%E7%9B%AE%E6%80%BB%E7%AE%A1"></iframe></div>
+<div id="toast"></div>
+
+<script src="/static/frappe-gantt.umd.js"></script>
+<script>
+let S={projects:[],events:[],notifications:[],approvals:[],actions:[],counts:{}}, SEL=null, FILTER='all', VIEW='overview';
+let GANTT=null, GDATA=null, AUTORUNS=null, CHATSEND_BUSY=false;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LBL={active:'正常推进',stalled:'已停滞',awaiting_decision:'待决策',pending_acceptance:'待验收'};
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',3600)}
+function api(u,o){return fetch(u,o).then(r=>r.json())}
+function post(u,b){return api(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})})}
+function md(s){ // 极简 markdown：**bold** / `code` / 换行，先转义再还原
+  return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>');
+}
+function setView(v){
+  VIEW=v; document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));
+  $('v-'+v).classList.add('on');
+  document.querySelectorAll('.mod').forEach(e=>e.classList.toggle('on',e.dataset.v===v));
+  if(v==='chat'){loadChat();loadAuto();loadCtx()}
+  if(v==='gantt'){loadGantt(false)}
+  if(v==='approval') renderApprovalView();
+  if(v==='logs') renderLogView();
+  if(v==='notice') renderNoticeView();
+}
+
+/* ───────── 项目总览（沿用上轮逻辑） ───────── */
+function renderTabs(){
+  const c=S.counts||{};
+  const defs=[['all','全部',S.projects.length],['active','正常推进',c.active||0],['stalled','已停滞',c.stalled||0],
+              ['awaiting_decision','待决策',c.awaiting_decision||0],['pending_acceptance','待验收',c.pending_acceptance||0]];
+  $('tabs').innerHTML=defs.map(([k,n,v])=>`<button class="tab ${FILTER===k?'on':''}" onclick="setFilter('${k}')">${n} <b>${v}</b></button>`).join('');
+}
+function setFilter(k){FILTER=k;renderTabs();renderList()}
+function renderList(){
+  const ps=S.projects.filter(p=>FILTER==='all'||p.state===FILTER);
+  if(!ps.length){$('list').innerHTML='<div class="empty">该分类暂无项目</div>';return}
+  $('list').innerHTML=ps.map(p=>{
+    const pct=p.overall_verified?Number(p.overall).toFixed(1)+'%':'待核实';
+    return `<div class="card ${SEL===p.id?'sel':''}" onclick="sel('${esc(p.id)}')">
+      <div class="t"><span>${esc(p.name)}</span><span class="badge s-${esc(p.state)}">${LBL[p.state]||p.state}</span></div>
+      <div class="m">${esc(p.category)} · ${esc(p.priority)} · ${p.auto_advance?'自动推进开':'已暂停'}</div>
+      <div class="m">进度 ${pct} · 关联会话 ${(p.sessions||[]).length} · 证据 ${(p.evidence||[]).length} 条</div>
+      <div class="bar"><i style="width:${p.overall_verified?Math.min(100,p.overall):0}%"></i></div>
+    </div>`}).join('');
+}
+function sel(id){SEL=id;renderList();renderDetail()}
+function renderDetail(){
+  const p=S.projects.find(x=>x.id===SEL);
+  if(!p){$('detail').innerHTML='<div class="empty">选择左侧项目查看详情</div>';return}
+  const ev=p.evidence||[], bl=p.blockers||[], pd=p.pending_decisions||[], ms=p.milestones||[];
+  const sn=p.snapshots||[], tasks=p.tasks||[];
+  const fmtB=b=>typeof b==='string'?esc(b):esc((b.what||'')+' — '+(b.why||b.action||''));
+  $('detail').innerHTML=`
+   <h2>${esc(p.name)} <span class="badge s-${esc(p.state)}">${LBL[p.state]||p.state}</span></h2>
+   <div class="sub">${esc(p.id)} · ${esc(p.source)} · ${esc(p.category)} · 最近状态变化 ${esc(p.last_change||'—')}</div>
+   <div class="grid">
+     <div class="kv"><div class="k">进度（可验证里程碑）</div><div class="v">${p.overall_verified?Number(p.overall).toFixed(1)+'%':'待核实'}</div></div>
+     <div class="kv"><div class="k">优先级 / 负责人</div><div class="v">${esc(p.priority)} · ${esc(p.owner)}</div></div>
+     <div class="kv"><div class="k">阻塞 / 待决策</div><div class="v">${bl.length} / ${pd.length}</div></div>
+     <div class="kv"><div class="k">自动推进</div><div class="v">${p.auto_advance?'开启':'已暂停'}</div></div>
+   </div>
+   <div class="row">
+     <button class="btn" onclick="pause('${esc(p.id)}',${p.auto_advance?1:0})">${p.auto_advance?'暂停自动推进':'恢复自动推进'}</button>
+     <button class="btn" onclick="runAction('${esc(p.id)}')">执行低风险接续</button>
+     <button class="btn pri" onclick="quick('帮我推进「${esc(p.name)}」的低风险任务')">在 AI 对话里推进它</button>
+   </div>
+   <h3>目标</h3><div style="font-size:12.5px;color:#c9d1d9">${esc(p.goal||'待核实')}</div>
+   <h3>下一步任务 / 建议</h3><div style="font-size:13px">${esc(p.next_action||'（空：需人工补下一步）')}</div>
+   <div class="split">
+    <div><h3>状态判定证据（${ev.length}）</h3>${ev.length?'<ul class="ev">'+ev.map(e=>`<li>${esc(e)}</li>`).join('')+'</ul>':'<div class="empty">无</div>'}
+      <h3>阻塞原因</h3>${bl.length?'<ul class="ev">'+bl.map(b=>`<li>${fmtB(b)}</li>`).join('')+'</ul>':'<div class="empty">无登记阻塞</div>'}</div>
+    <div><h3>待人工决策</h3>${pd.length?'<ul class="ev">'+pd.map(d=>`<li>${fmtB(d)}</li>`).join('')+'</ul>':'<div class="empty">无</div>'}
+      <h3>关联会话证据（DSH 真源）</h3>
+      <table><tr><th>会话</th><th>轮次</th><th>最后更新</th></tr>${(p.sessions||[]).map(s=>`<tr><td>${esc(s.title||s.file)}</td><td>${s.turns}</td><td class="mono">${esc((s.mtime_iso||'').slice(0,16))}</td></tr>`).join('')||'<tr><td colspan="3">无关联会话</td></tr>'}</table></div>
+   </div>
+   <div class="split">
+     <div><h3>里程碑（${ms.length}）</h3><table><tr><th>#</th><th>阶段 / 完成条件</th><th>完成度</th></tr>${ms.map(m=>`<tr><td>${m.no}</td><td>${esc(m.name)}<div class="mono">${esc((m.cond||'').slice(0,80))}</div></td><td>${Number(m.pct).toFixed(0)}%</td></tr>`).join('')||'<tr><td colspan="3">无可验证里程碑：进度标「待核实」，不编造</td></tr>'}</table></div>
+     <div><h3>历史进度（持久化快照）</h3><table><tr><th>时间</th><th>进度</th><th>状态</th><th>轮次增量</th></tr>${sn.map(s=>`<tr><td class="mono">${esc(s.at.slice(5,16))}</td><td>${Number(s.overall).toFixed(1)}%</td><td>${esc(s.state)}</td><td>${s.turn_delta}</td></tr>`).join('')||'<tr><td colspan="4">尚无快照</td></tr>'}</table></div>
+   </div>
+   <h3>任务状态（点击真实变更，验证自动刷新 / 刷新后更新）</h3>
+   <div id="tasklist">${tasks.map(t=>`<div class="task"><button class="btn" onclick="flip('${esc(t.id)}','${esc(t.status)}')">${t.status==='done'?'↺ 重开':'✓ 完成'}</button><span class="st ${t.status==='done'?'':'pending'}">${esc(t.status)}</span><span>${esc(t.title)}</span><span class="mono">${esc((t.updated_at||'').slice(5,16))}</span></div>`).join('')||'<div class="empty">无任务</div>'}</div>
+   <h3>证据文件</h3><div class="mono">${esc((p.file_evidence||{}).path||'（未定位到项目目录）')} · 文件数 ${(p.file_evidence||{}).files||0} · 最新 ${esc(((p.file_evidence||{}).mtime_iso||'').slice(0,16))||'—'}</div>`;
+}
+function flip(id,st){
+  const plain=String(id).replace(/%3A/gi,':').replace(/%2F/gi,'/');
+  post('/api/tasks/'+plain+'/status',{status:st==='done'?'pending':'done'})
+   .then(r=>{toast(r.ok?'任务状态已变更并持久化':'变更失败');return load()}).catch(e=>toast('变更失败：'+e));
+}
+function pause(id,cur){post('/api/projects/'+encodeURIComponent(id)+'/'+(cur?'pause':'resume'),{}).then(r=>{toast(cur?'已暂停自动推进':'已恢复自动推进');load()})}
+function runAction(pid){
+  const a=(S.actions||[]).find(x=>x.project_id===pid&&x.kind==='generate_patrol_brief');
+  if(!a){toast('该项目暂无可执行动作');return}
+  post('/api/actions/'+a.id+'/run',{}).then(r=>{toast(r.ok?'动作执行成功，产物已回读校验':('动作：'+r.status+' '+(r.error||'')));load()})
+}
+function doPatrol(){toast('已触发手动巡检…');post('/api/patrol',{}).then(r=>{toast('巡检完成：'+(r.result?r.result.projects.length:0)+' 项目');load()})}
+function triggerAuto(){toast('已触发主动闭环…');post('/api/auto-runs/trigger',{}).then(r=>{toast((r.ok?('主动闭环完成：推进 '+r.advanced+' 项'):('主动闭环：'+(r.error||r.skipped||'未执行'))));loadAuto();load()})}
+function decide(id,d){post('/api/approvals/'+id,{decision:d,note:'总控台人工决定'}).then(r=>{toast('审批已记录：'+d);load()})}
+function renderGlobal(){
+  $('patrolS').textContent=S.patrol_seconds||'—';$('lastPatrol').textContent=(S.last_patrol||'—').slice(5,16);
+  $('nProj').textContent=S.projects.length;const c=S.counts||{};
+  $('nStall').textContent=c.stalled||0;$('nDec').textContent=c.awaiting_decision||0;
+  const pend=(S.approvals||[]).filter(a=>a.status==='pending').length;
+  $('nAppr').textContent=pend;$('mAppr').textContent=pend;
+  $('srvtime').textContent=(S.server_time||'').slice(5,19);
+  $('notices').innerHTML=(S.notifications||[]).slice(0,12).map(n=>`<div class="notice"><b>${esc(n.title)}</b> · <span class="mono">${esc((n.at||'').slice(5,16))}</span><br>${esc(n.body)}</div>`).join('')||'<div class="empty">暂无通知</div>';
+  $('approvals').innerHTML=(S.approvals||[]).slice(0,10).map(a=>`<div class="task"><span class="st ${a.status==='pending'?'pending':''}">${esc(a.status)}</span><span style="flex:1">${esc(a.title)}<div class="mono">${esc((a.detail||'').slice(0,90))}</div></span>${a.status==='pending'?`<button class="btn warn" onclick="decide(${a.id},'approve')">批准</button><button class="btn" onclick="decide(${a.id},'deny')">拒绝</button>`:''}</div>`).join('')||'<div class="empty">暂无待审批事项</div>';
+  $('actions').innerHTML=(S.actions||[]).slice(0,14).map(a=>`<div class="task"><span class="st ${a.status==='succeeded'?'':(a.status==='failed'?'failed':'pending')}">${esc(a.status)}</span><span style="flex:1">${esc(a.title)}<div class="mono">${esc((a.output||'').slice(0,105))} · 尝试 ${a.attempts}/2 · 回读 ${a.checked?'通过':'未通过'}</div></span><button class="btn" onclick="post('/api/actions/${a.id}/run',{}).then(r=>{toast(r.ok?'执行成功并校验':'执行未通过');load()})">运行</button></div>`).join('')||'<div class="empty">暂无动作</div>';
+  $('events').innerHTML=(S.events||[]).slice(0,18).map(e=>`<div class="mono" style="padding:2px 0;border-bottom:1px solid var(--line)">${esc((e.at||'').slice(5,19))} [${esc(e.kind)}] ${esc(e.message)}</div>`).join('')||'<div class="empty">暂无事件</div>';
+}
+function load(){return api('/api/state').then(d=>{S=d;renderGlobal();renderTabs();renderList();if(SEL)renderDetail();else if(S.projects.length){SEL=S.projects[0].id;renderList();renderDetail()}
+  if(VIEW==='approval')renderApprovalView();if(VIEW==='logs')renderLogView();if(VIEW==='notice')renderNoticeView();
+  }).catch(e=>console.error('state load',e))}
+
+/* ───────── P1 AI 对话 ───────── */
+function loadChat(){
+  return api('/api/chat/history').then(d=>{
+    const box=$('chatlog');
+    if(!d.messages||!d.messages.length){box.innerHTML='<div class="empty">还没有对话。试试上方快捷问题，或直接输入。</div>';return}
+    box.innerHTML=d.messages.map(m=>`<div class="msg ${m.role==='user'?'user':'ai'}">
+      <div class="who">${m.role==='user'?'你':'AI 私人总管'} · ${esc((m.at||'').slice(5,16))}${m.model?' · '+esc(m.model):''}${m.elapsed_ms?' · '+m.elapsed_ms+'ms':''}</div>
+      <div class="body">${md(m.text||'')}</div></div>`).join('');
+    box.scrollTop=box.scrollHeight;
+  }).catch(e=>console.error('chat history',e));
+}
+function loadCtx(){
+  api('/api/chat/status').then(r=>{
+    $('aiStat').textContent=r.ok?'在线':'降级';$('aiStat').style.color=r.ok?'var(--green)':'var(--amber)';
+  }).catch(()=>{$('aiStat').textContent='离线'});
+  $('ctxBox').textContent=S.projects.map(p=>{
+    const pct=p.overall_verified?Number(p.overall).toFixed(1)+'%':'待核实';
+    return `[${p.id}] ${p.name}｜${LBL[p.state]||p.state}｜${pct}｜阻塞${(p.blockers||[]).length}｜决策${(p.pending_decisions||[]).length}`;
+  }).join('\n')||'—';
+}
+function quick(t){setView('chat');$('chatInput').value=t;sendChat()}
+function sendChat(){
+  if(CHATSEND_BUSY)return;
+  const inp=$('chatInput'), msg=(inp.value||'').trim();
+  if(!msg){toast('先输入一句话');return}
+  CHATSEND_BUSY=true;$('chatSend').disabled=true;$('chatSend').textContent='思考中…';inp.value='';
+  const box=$('chatlog');
+  if(box.querySelector('.empty'))box.innerHTML='';
+  box.insertAdjacentHTML('beforeend',`<div class="msg user"><div class="who">你 · 刚刚</div><div class="body">${esc(msg)}</div></div>`);
+  box.insertAdjacentHTML('beforeend',`<div class="msg ai" id="pendingMsg"><div class="who">AI 私人总管 · 正在读取真实项目数据…</div><div class="body">…</div></div>`);
+  box.scrollTop=box.scrollHeight;
+  post('/api/chat',{message:msg}).then(r=>{
+    const pm=$('pendingMsg');
+    if(pm){pm.removeAttribute('id');pm.querySelector('.who').textContent='AI 私人总管 · '+new Date().toTimeString().slice(0,5)+(r.model?' · '+r.model:'')+(r.elapsed_ms?' · '+r.elapsed_ms+'ms':'');
+      pm.querySelector('.body').innerHTML=md(r.reply||r.error||'（无回复）');}
+    if(r.intent==='approval')toast('已停止执行，生成审批 #'+r.approval_id);
+    if(r.executed)toast('DSH 原会话真执行完成，产物已回读校验');
+    box.scrollTop=box.scrollHeight;
+    loadAuto();load();
+  }).catch(e=>{toast('对话失败：'+e);const pm=$('pendingMsg');if(pm)pm.querySelector('.body').textContent='请求失败：'+e})
+  .finally(()=>{CHATSEND_BUSY=false;$('chatSend').disabled=false;$('chatSend').textContent='发送';inp.focus()});
+}
+$('chatInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat()}});
+function loadAuto(){
+  api('/api/auto-runs').then(d=>{
+    AUTORUNS=d;
+    const runs=(d.runs||[]), dsh=(d.dsh_sessions||[]);
+    $('autoBox').innerHTML=runs.slice(0,8).map(r=>`<div class="task"><span class="st ${r.outcome==='succeeded'?'':'failed'}">${esc(r.outcome)}</span><span style="flex:1">${esc(r.trigger)}<div class="mono">${esc((r.detail||'').slice(0,90))}</div></span></div>`).join('')||'<div class="empty">暂无主动推进记录</div>';
+    $('dshBox').innerHTML=dsh.slice(0,8).map(r=>`<div class="task"><span class="st ${r.outcome==='succeeded'?'':'failed'}">${esc(r.outcome)}</span><span style="flex:1"><div class="mono">${esc((r.session_id||'（无会话）').slice(0,26))} · ${r.elapsed_ms}ms</div>${esc((r.final_text||'').slice(0,70))}</span></div>`).join('')||'<div class="empty">暂无 DSH 会话</div>';
+  }).catch(e=>console.error('auto runs',e));
+}
+
+/* ───────── P2 甘特图 ───────── */
+function loadGantt(rebuild){
+  const url=rebuild?'/api/gantt/rebuild':'/api/gantt';
+  return (rebuild?post(url,{}):api(url)).then(d=>{
+    const r=rebuild?(d.data||d):d; GDATA=r;
+    $('gMeta').textContent=`${r.projects} 项目 · 有真实日期 ${r.scheduled_count} 条 · 待排期 ${r.unscheduled_count} 条 · ${esc((r.generated_at||'').slice(5,19))}`;
+    $('gUnschedN').textContent=r.unscheduled_count;
+    const box=$('ganttBox');
+    const tasks=(r.tasks||[]).map(t=>Object.assign({},t));
+    if(!tasks.length){box.innerHTML='<div class="empty">暂无可排期任务</div>';return}
+    if(typeof Gantt==='undefined'){box.innerHTML='<div class="empty">甘特组件未加载</div>';return}
+    box.innerHTML='<div id="ganttSvg"></div>';
+    try{
+      GANTT=new Gantt('#ganttSvg',tasks,{
+        view_mode:'Week', date_format:'YYYY-MM-DD', language:'zh',
+        readonly:true, readonly_dates:true, readonly_progress:true,
+        popup_on:'click', today_button:true, view_mode_select:true,
+        scroll_to:'today', bar_height:22, padding:16,
+        on_click:(t)=>showGanttDetail(t)
+      });
+    }catch(e){box.innerHTML='<div class="empty">甘特渲染异常：'+esc(e)+'</div>';return}
+    // 真实点击兜底：对 svg 里的 bar 组绑定（frappe 版本 on_click 名可能不同）
+    box.querySelectorAll('.bar-wrapper').forEach(el=>{
+      el.style.cursor='pointer';
+      el.addEventListener('click',()=>{
+        const label=(el.closest('.gantt-row')?.getAttribute('data-id'))||el.getAttribute('data-id');
+        const t=tasks.find(x=>x.id===label)||tasks[0]; showGanttDetail(t);
+      });
+    });
+    $('ganttUnsched').innerHTML='<table><tr><th>里程碑</th><th>真实完成度</th><th>依赖</th><th>为什么待排期</th></tr>'+
+      (r.unscheduled||[]).map(u=>`<tr><td>${esc(u.name)}<div class="mono">${esc(u.project_id)} ${esc(u.id)}</div></td><td>${Number(u.progress).toFixed(0)}%</td><td class="mono">${esc(u.dependencies||'无')}</td><td>${esc(u.source)}</td></tr>`).join('')+
+      '</table>';
+    if(rebuild)toast('甘特已重建并同步 SQLite');
+  }).catch(e=>{console.error('gantt',e);$('ganttBox').innerHTML='<div class="empty">载入失败：'+esc(e)+'</div>'});
+}
+function showGanttDetail(t){
+  if(!t)return;
+  const p=(S.projects||[]).find(x=>x.id===t.project_id)||{};
+  const row=(GDATA?.all_rows||[]).find(x=>x.id===t.id)||{};
+  $('ganttDetail').innerHTML=`<div class="grid">
+    <div class="kv"><div class="k">条目</div><div class="v">${esc(t.name||'')}</div></div>
+    <div class="kv"><div class="k">所属项目</div><div class="v">${esc(p.name||t.project_id||'—')}</div></div>
+    <div class="kv"><div class="k">项目真实状态</div><div class="v">${esc(LBL[p.state]||p.state||'—')}</div></div>
+    <div class="kv"><div class="k">项目进度</div><div class="v">${p.overall_verified?Number(p.overall).toFixed(1)+'%':'待核实'}</div></div>
+   </div>
+   <table><tr><th>时间</th><td>${esc(t.start||'待排期')} → ${esc(t.end||'待排期')}</td></tr>
+   <tr><th>本条完成度</th><td>${Number(t.progress||0).toFixed(0)}%（${esc(t.kind||'')}）</td></tr>
+   <tr><th>依赖</th><td class="mono">${esc((t.dependencies||[]).join(', ')||'无')}</td></tr>
+   <tr><th>日期来源</th><td>${esc(t.source||row.source||'—')}</td></tr>
+   <tr><th>项目下一步</th><td>${esc((p.next_action||'（空）').slice(0,180))}</td></tr></table>
+   <div class="row"><button class="btn pri" onclick="openProject('${esc(t.project_id||'')}')">打开项目详情</button></div>`;
+}
+function openProject(pid){SEL=pid;setView('overview');renderList();renderDetail()}
+
+/* ───────── 其余视图 ───────── */
+function renderApprovalView(){
+  const aps=S.approvals||[];
+  $('allApprovals').innerHTML=aps.map(a=>`<div class="task"><span class="st ${a.status==='pending'?'pending':''}">${esc(a.status)}</span>
+    <span style="flex:1">${esc(a.title)}<div class="mono">${esc((a.at||'').slice(0,16))} · ${esc(a.kind)} · 项目 ${esc(a.project_id||'—')}</div>${esc(a.detail||'')}</span>
+    ${a.status==='pending'?`<button class="btn warn" onclick="decide(${a.id},'approve')">批准</button><button class="btn" onclick="decide(${a.id},'deny')">拒绝</button>`:''}</div>`).join('')||'<div class="empty">暂无审批事项</div>';
+}
+function renderLogView(){
+  $('logActions').innerHTML=(S.actions||[]).slice(0,30).map(a=>`<div class="task"><span class="st ${a.status==='succeeded'?'':(a.status==='failed'?'failed':'pending')}">${esc(a.status)}</span><span style="flex:1">${esc(a.title)}<div class="mono">${esc((a.output||'').slice(0,140))} · 回读 ${a.checked?'通过':'未通过'}</div></span></div>`).join('')||'<div class="empty">—</div>';
+  $('logEvents').innerHTML=(S.events||[]).slice(0,50).map(e=>`<div class="mono" style="padding:2px 0;border-bottom:1px solid var(--line)">${esc((e.at||'').slice(5,19))} [${esc(e.kind)}] ${esc(e.message)}</div>`).join('')||'<div class="empty">—</div>';
+  const d=AUTORUNS||{runs:[],dsh_sessions:[]};
+  $('logAuto').innerHTML=(d.runs||[]).slice(0,20).map(r=>`<div class="mono" style="padding:3px 0;border-bottom:1px solid var(--line)">${esc((r.at||'').slice(5,19))} [${esc(r.trigger)}] ${esc(r.outcome)} · ${esc((r.session_id||'').slice(0,22))} · ${esc((r.detail||'').slice(0,110))}</div>`).join('')||'<div class="empty">—</div>';
+}
+function renderNoticeView(){
+  $('allNotices').innerHTML=(S.notifications||[]).slice(0,60).map(n=>`<div class="notice"><b>${esc(n.title)}</b> · <span class="mono">${esc((n.at||'').slice(0,19))} · ${esc(n.via||'')}</span><br>${esc(n.body)}</div>`).join('')||'<div class="empty">暂无通知</div>';
+}
+function toggleLog(){const p=$('logpanel');p.style.display=p.style.display==='block'?'none':'block'}
+window.onerror=function(m,s,l,c,e){post('/api/log/page',{event:'js_error',message:'window.onerror '+m+' @'+s+':'+l});};
+window.addEventListener('unhandledrejection',e=>post('/api/log/page',{event:'js_error',message:'unhandledrejection '+String(e.reason)}));
+post('/api/log/page',{event:'view',message:'统一工作台页面加载'});
+load();setInterval(load,5000);loadAuto();loadCtx();
+setInterval(()=>api('/api/health').then(h=>{$('lastPatrol').textContent=(h.last_patrol||'—').slice(5,16)}).catch(()=>{}),10000);
+</script>
+</body>
+</html>

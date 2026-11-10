@@ -1,0 +1,24 @@
+# 运行时产物 / 缓存 / 二进制 / 本机私有数据 —— 一律不入库
+__pycache__/
+*.pyc
+*.pyo
+.codegraph/codegraph.db
+.codegraph/*.db
+_backup-v2-*/
+_backup-*/
+*.bak-*
+*.db.bak-*
+
+# 唯一真源：真实运行库含本机 9 个内部项目状态、通知与对话历史，属私人运行数据。
+# 结构以 data/schema.sql 公开；服务启动会自动重建（见 README「复现」）。
+data/state.db
+data/state.db-journal
+data/state.db-wal
+data/state.db-shm
+
+# 本地日志与临时文件
+logs/
+*.log
+~$*
+Thumbs.db
+desktop.ini

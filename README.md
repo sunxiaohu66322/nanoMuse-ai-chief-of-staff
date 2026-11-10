@@ -1,0 +1,175 @@
+# nanoMuse AI 私人总管
+
+> 持续运行的**主动型私人 AI 项目总管**：自动发现项目、追踪真实进度、定时自主巡检、
+> 发现停滞自行调度 DSH 会话推进、核验产物后更新状态与甘特图；重大决策只生成审批事项等人拍板。
+> **人只负责重要决策，不负责手工维护任务看板。**
+
+- 版本 **v2**（2026-11-11）｜许可 **MIT**｜作者 **YG** (`sunxiaohu66322`)
+- 本地总控台 `http://127.0.0.1:9196/`（默认仅本机）
+- 真实浏览器验收：**v1 7/7 + v2 8/8 全部 PASS**（截图 / 逐条日志 / 三轮失败过程均保留在 `验收/`）
+
+---
+
+## 1. 它解决什么问题
+
+DSH 里有几百个会话、若干套项目台账、任务图谱、通知中心，但没有一层「**跨项目地盯着所有事**」：
+哪个真的卡住了、卡了多久、下一步该谁做、做完没有、有没有产物可验。
+
+这一层就是本系统。它不是新造第四套记忆系统，而是把已有真源**物化成一份项目状态**，
+并在上面加一个会自己动手的调度闭环。
+
+核心判据（写死在代码里，不是提示词）：
+
+| 原则 | 实现 |
+|:--|:--|
+| **不用会话最后更新时间判停滞** | 里程碑快照长期不变 + 上游 freshness + 无真实增量 + 下一步为空，四者合判 |
+| **进度不编造** | 按可验证里程碑加权；无 roadmap → 「待核实」，不是 0% 也不是估算 |
+| **日期不编造** | 甘特只取真实 `snapshots.at` / `tasks.updated_at`；无 start/end → 「待排期」 |
+| **执行要可验** | 调度后必须回读产物（存在 + 含真实 sessionId + 含正文）才允许更新状态 |
+| **高风险不自动做** | 方向变更 / 覆盖 / 删除 / 发布 / 付费 → 只登记审批并停手 |
+
+实测反例（证明判据不是看时间戳）：某项目关联会话 24h 内 mtime 被写过，仍被正确判为
+**停滞（16.7 天冻结，里程碑快照 2 版恒 0%，下一步为空）**。
+
+---
+
+## 2. 架构与真源（重要：外部 AI 读这份）
+
+```
+                    ┌──────────────── 上游真源（只读，不在本仓库） ────────────────┐
+                    │ 9180 项目导航 /api/public/projects   （正式项目与 roadmap）   │
+                    │ 9134 任务图谱 /api/graph             （进行中/待确认节点）    │
+                    │ DSH sessions（777 份会话目录）        （自动聚类成会话簇）    │
+                    │ Host task-board ledger-v2.json       （真实会话接续回执）    │
+                    │ 7864 wb 代理 /v1/chat/completions    （对话模型，可降级）    │
+                    └───────────────────────┬───────────────────────────────────┘
+                                            │ 60s 增量只读
+                                            ▼
+   总管.py  ── 发现/聚类/停滞判据/单一真源 /api/state ──► data/state.db（唯一真源，13 表）
+       │                                                     ▲
+       │ 巡检后异步                                          │ 回写
+       ▼                                                     │
+   总管扩展.py ── auto_advance_cycle(): 发现停滞 → 风险分级 → 真调度 → 核验 → 去重通知
+       │                    │
+       │                    └─► dsh --profile headless --patch headless-overlay.yml --json <task>
+       │                              → NDJSON(session/text/final) → data/自动复核-*.md → 回读校验
+       ├─ /api/chat    结构化上下文(≈2KB) → 模型 → 清洗泄漏 → 可触发受控调度 → 落 chat_messages
+       └─ /api/gantt   真实时间戳 → 36 条有日期 / 31 条「待排期」
+                                            │
+                                            ▼
+                        web/index.html 六模块统一工作台（全部读同一个 /api/state）
+                        AI 对话｜项目总览｜甘特图｜待审批｜执行日志｜主动提醒
+```
+
+**单一真源**：所有模块（含甘特与 AI 对话）都从 `/api/state` 读同一份 state.db，
+不存在「聊天里一套、图表里另一套」。
+
+### 与 nanoMuse 官方仓库的关系（P0 实测结论）
+
+核验过 `nano-muse/nanoMuse` 1.0.9 的 README / pyproject / Tiller harness bundle / docs。
+结论是**第 2 档「有现成的、差一点 → 改编」**：
+
+- **复用**：Goals / routines / Sentinel / 记忆契约这些「主动能力」的设计口径；
+- **未整包安装**：官方 `cordis.patch.yml` 会覆盖 system-prompt、默认 agent 预设、侧栏、品牌、设置，
+  而本机 `profiles/desktop` 挂了 40+ bundle（master-rules / v3-scheduler / pojia / task-board 等），
+  整包覆盖会破坏生产；
+- **落在已有真源上**：状态层不新造，直接用 9180 / 9134 / sessions / task-board。
+
+详见 `P0-环境与兼容性核验.md`（含 §0.7 要求的六渠道检索记录：GitHub / HF / 全网 /
+DSH 插件市场 / MCP 市场 / Skill 市场，以及每档否掉的候选与理由）。
+
+---
+
+## 3. 文件说明
+
+| 文件 | 作用 |
+|:--|:--|
+| `总管.py` | 主服务（`ThreadingHTTPServer` + stdlib + SQLite）：发现、聚类、停滞判据、巡检、通知、全部 v1 接口 |
+| `总管扩展.py` | v2：AI 对话 / 模型调用与泄漏清洗 / DSH headless 调度 / 甘特数据 / 主动闭环 / 审批闸门 |
+| `web/index.html` | 六模块统一工作台，5s 轮询自动刷新 |
+| `web/static/` | frappe-gantt **1.2.2 / MIT** 本地静态件（umd / esm / css），无 CDN 依赖 |
+| `headless-overlay.yml` | **隔离**的 provider 注册，只作用于本项目 spawn 的 headless 会话，不改生产 profile |
+| `data/schema.sql` | 13 张表的完整结构（真实运行库不入库，见 §6） |
+| `data/自动复核-*.md` | DSH 会话真产物样本（回读校验过） |
+| `启动.vbs` | 无窗启动器（`SW_HIDE`），供计划任务用 |
+| `验收/` | v1 9 张 + v2 10 张真实浏览器截图、逐条 JSON 日志、验收脚本、结论、**三轮过程记录** |
+| `交付与恢复手册.md` | 全部能力、8/8 验收证据、已知限制、启动/回滚/重建步骤 |
+| `FOR_CHATGPT.md` | ★ 与外部 AI 讨论「怎么进化」的议题清单（带真实运行数据） |
+| `llms.txt` | 60 秒总纲，外部 AI 第一份读它 |
+
+---
+
+## 4. 启动与复现
+
+```powershell
+# 依赖：Python 3.13（本机 F:\pyenvs\douyin\Scripts\python.exe），仅标准库 + sqlite3
+# 前端：静态文件，无构建步骤
+
+# 无窗启动
+wscript "…\nanoMuse项目总管\启动.vbs"
+# 或前台
+$env:NM_PORT='9196'; $env:NM_PATROL_SECONDS='60'
+& python 总管.py
+
+# 健康 / 关键接口
+Invoke-RestMethod http://127.0.0.1:9196/health          # persisted=true, last_patrol
+Invoke-RestMethod http://127.0.0.1:9196/api/state        # 单一真源：9 项目全量状态
+Invoke-RestMethod http://127.0.0.1:9196/api/chat/status  # 模型链路实测 / 降级状态
+Invoke-RestMethod http://127.0.0.1:9196/api/gantt        # 甘特真数据
+Invoke-RestMethod http://127.0.0.1:9196/api/auto-runs    # 主动闭环与 DSH 回执
+```
+
+**复现基线**：`data/state.db` 不存在时，服务自动按 `schema.sql` 同级代码建表，
+并从上游真源重新发现项目（实测 9 个项目 / 5 个会话簇，上游一字不动）。
+
+**本机路径配置化**：源码里的 `DSH_HOME`（默认 `I:\DSHHome`）、`WORKSPACE`、
+`DSH_CMD`、9180/9134/7864 端口均为常量或环境变量；换机器时需改 `总管.py` 头部常量与
+`总管扩展.py` 的 `DSH_CMD` / `LLM_URL`。这是**已知的可移植性缺口**，列在 `FOR_CHATGPT.md` 议题 6。
+
+---
+
+## 5. 两个已验证闭环
+
+**对话闭环**（v2 验收第 2/3/4 项）
+用户在真浏览器输入「目前哪个项目最需要推进」→ 模型读 9 项目结构化摘要回答（504 字，
+点名 4 个真实项目，无提示词泄漏）→ 用户要求推进某低风险任务 → 真起 DSH 会话
+`session-7ca2cb58…` → 写 962B 产物 → 回读校验 `checked=1` → 动作/甘特/项目状态更新 → 刷新后保持。
+
+**主动闭环**（v2 验收第 6 项）
+不发任何用户指令，纯被动等 74s → `last_patrol` 自动前进、新增定时巡检事件 →
+`auto_advance_cycle()` 自行发现停滞、分级、调度、核验、去重通知。
+单实例锁 / 150s 超时 / 同项目同日成功 1 次、失败 2 次上限，防重复与死循环。
+
+---
+
+## 6. 隐私与上传边界（本仓库刻意不含什么）
+
+本仓库**只含代码、文档、验收截图与结构定义**，不含：
+
+- `data/state.db`（真实运行库：9 个内部项目状态、945 条快照、306 条事件、535 条通知、26 条对话）
+- 任何密钥 / token / 凭据文件（`headless-overlay.yml` 只有 `apiKeyEnv: WB_API_KEY` 变量名，无值）
+- `.credentials.yaml`、`.env`、`hosts.yml`、`panel-env.env`
+- 备份目录、`__pycache__`、`.codegraph/*.db`、本机日志
+
+全部源文件与文档已按 `ghp_* / github_pat_* / sk-* / 40+ 字符字面量` 扫描，**0 命中**。
+授权用的 GitHub PAT 存在本机 gh CLI keyring（`repo, workflow, read:org`），**从未写入本仓库**。
+
+---
+
+## 7. 已知限制（如实，不粉饰）
+
+1. 模型链路依赖本机 `127.0.0.1:7864` wb 代理；停了会降级为规则引擎读真实 DB，并如实说明。
+2. `dsh headless` **无法续接** `agent preset "standard"` 的桌面会话 → 优先尝试 `--session-id`，
+   失败后如实回退真起新会话并把原因写进 `fallback` 与产物，不冒充续接成功。
+3. 9180 roadmap 本身没有 start/end → 31 个里程碑一律「待排期」，不补假工期。
+4. 无 roadmap 的会话簇进度为「待核实」，不是估算值。
+5. 开机自启未挂（系统级计划任务需主人批准）；`启动.vbs` 已备好。
+6. nanoMuse 整包 / Cloud / 手机 / Hands 未装；微信本期不接入。
+7. 自动推进目前只做**只读复核 + 产物回读**；方向变更/覆盖/删除/发布/付费只登记审批。
+8. 验收三轮里前两轮各有 1 项 FAIL，判据与真异常都修完才 8/8，**失败轮次记录未删**。
+
+---
+
+## 8. 许可
+
+MIT。frappe-gantt 1.2.2 亦为 MIT，静态件随仓库附带，版权归原作者。
