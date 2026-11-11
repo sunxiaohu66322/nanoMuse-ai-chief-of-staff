@@ -20,6 +20,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import threading
 import time
 import traceback
@@ -28,6 +29,7 @@ import urllib.request
 from pathlib import Path
 
 G = None
+ENG = None
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data"
 STATIC = ROOT / "web" / "static"
@@ -72,11 +74,15 @@ QUERY = re.compile(
 
 def install(ns):
     """把主模块的工具函数注入本模块，并幂等建立新表（旧表一字不动）。"""
-    global G
+    global G, ENG
     G = ns
     with G["_lock"], G["conn"]() as c:
         c.executescript(EXTRA_SCHEMA)
-    G["emit"]("ext.install", "交互升级扩展已挂载：chat / gantt / auto-runs / dsh-headless", "ok")
+    # 第二阶段进度引擎（四态推进 / 推断 / 计划甘特 / 项目记忆 / 四级证据）
+    import 总管进度引擎 as eng
+    eng.install(ns, sys.modules[__name__])
+    ENG = eng
+    G["emit"]("ext.install", "交互升级扩展已挂载：chat / gantt / auto-runs / dsh-headless / 进度引擎", "ok")
 
 
 # ────────────────────────────── 凭据 / 模型 ──────────────────────────────
@@ -258,7 +264,14 @@ def build_context(ps):
             "- [%s] %s｜状态=%s｜进度=%s｜优先级=%s｜下一步=%s｜阻塞=%d 条｜待决策=%d 条｜里程碑：%s" % (
                 p["id"], p["name"], LBL.get(p["state"], p["state"]), pct, p["priority"],
                 (str(p.get("next_action") or "（空）")[:120].replace("\n", " ")), len(bl), len(pd), ms_txt))
-    return "\n".join(lines)
+    # ④ 按需挂项目长期记忆与四级证据统计（不灌全量聊天历史）
+    base = "\n".join(lines)
+    if ENG is not None:
+        try:
+            base = ENG.decorate_context(base, ps)
+        except Exception:
+            pass
+    return base
 
 
 def pick_project(msg, ps):
@@ -322,7 +335,27 @@ def _make_approval(project_id, title, detail, kind="chat_high_risk"):
 
 
 def do_advance(p, msg, trigger="chat"):
-    """受控调度 DSH 原会话 → 落真实产物 → 回读校验 → 更新动作/自动记录。"""
+    """第二阶段：转发到真四态推进引擎（旧只读复核实现保留为 _do_advance_legacy 仅作回退）。
+
+    旧实现的缺陷：派「只读复核会话」→ 生成报告即记 succeeded，项目状态层零变化 = 假推进。
+    新实现只在「结构化证据合规 + 项目状态真实变化 + 回读确认」后才返回 ok/advanced。
+    """
+    if ENG is not None:
+        try:
+            return ENG.do_advance_real(p, msg, trigger=trigger)
+        except Exception as e:
+            G["emit"]("engine.fallback", "真推进引擎异常，回退旧复核并如实标记 no_change：%s" % e,
+                      "error", p["id"], {"exc": traceback.format_exc()[:1200]})
+            r = _do_advance_legacy(p, msg, trigger=trigger)
+            r["outcome"] = "review_only_fallback"
+            r["no_change"] = True
+            r["ok"] = False
+            return r
+    return _do_advance_legacy(p, msg, trigger=trigger)
+
+
+def _do_advance_legacy(p, msg, trigger="chat"):
+    """旧只读复核实现（保留不动，仅作引擎失败时的透明回退，绝不冒充推进成功）。"""
     pid, name = p["id"], p["name"]
     reason = "聊天指令：%s" % msg[:120] if trigger == "chat" else "定时巡检发现可推进任务"
     task = (
@@ -491,18 +524,28 @@ def chat_post(body):
             result["execution"] = ex
             result["executed"] = bool(ex.get("ok"))
             result["action_id"] = ex.get("action_id")
-            if ex.get("ok"):
-                reply += ("\n\n✅ **已真实调度 DSH 原会话执行并核验成果**\n"
-                          "- 会话 `%s`（%s ms）｜产物 `%s`（%d 字节，回读校验通过）\n"
+            if ex.get("ok") and ex.get("outcome") == "advanced":
+                st = ex.get("states") or {}
+                reply += ("\n\n✅ **实际推进并验收成功**（非只读复核）\n"
+                          "- 四态：巡检%s / 复核%s / 任务执行%s / 实际推进验收%s\n"
+                          "- 会话 `%s`（%s ms）｜结构化证据产物 `%s`（%d 字节，回读校验通过）\n"
+                          "- 已落库：候选里程碑证据 + 项目阶段总结 + 推断下一步（如适用），回读确认变化\n"
                           "- DSH 回执：%s" % (
+                              "✓" if st.get("patrol") else "✗", "✓" if st.get("review") else "✗",
+                              "✓" if st.get("executed") else "✗", "✓" if st.get("advanced") else "✗",
                               ex.get("session_id") or "—", ex.get("elapsed_ms") or 0,
                               Path(ex.get("file") or "").name, ex.get("bytes") or 0,
                               (ex.get("dsh_text") or "")[:260].replace("\n", " ")))
                 if ex.get("fallback"):
                     reply += "\n- 注：%s" % ex["fallback"]
+            elif ex.get("no_change"):
+                reply += ("\n\n⚠️ **本次只是复核，没有项目进展**：%s。"
+                          "系统按去重规则不把巡检/生成报告/写日志计为推进，也未重复通知。" %
+                          str(ex.get("error") or "结构化证据已登记过")[:160])
             else:
-                reply += ("\n\n⚠️ DSH 会话已真实发起，但成果校验未通过：%s（已升级提醒，"
-                          "有限重试上限 2 次）" % str(ex.get("error") or "未取得有效正文")[:180])
+                reply += ("\n\n⚠️ DSH 会话已真实发起，但**未达实际推进态**（巡检/复核/执行/验收四态未全通过）：%s"
+                          "（已升级提醒，有限重试上限 2 次，不无限循环）" %
+                          str(ex.get("error") or "未取得有效正文")[:180])
 
     _chat_save("assistant", reply, project_id=result["project_id"],
                action_id=result.get("action_id"), model=result["model"],
@@ -624,10 +667,13 @@ def auto_advance_cycle(trigger="patrol", max_per_round=2):
             if len(picked) >= max_per_round:
                 break
             pid = p["id"]
-            if done.get((pid, "succeeded"), 0) >= 1:
+            # ① 四态口径：只有 advanced（真实状态变化并回读验收）才阻止重复；
+            #    no_change / review_only_fallback 不算推进成功，但也写 advance_states 留痕，
+            #    由引擎 digest 去重保证「没有变化的重复复核不得无限运行」。
+            if done.get((pid, "advanced"), 0) >= 1:
                 continue
-            if done.get((pid, "failed"), 0) >= 2:
-                continue  # 有限重试上限，升级提醒后不再死循环
+            if done.get((pid, "failed"), 0) >= 2 or done.get((pid, "no_change"), 0) >= 2:
+                continue  # 有限重试上限 / 重复复核上限，升级提醒后不再死循环
             nxt = str(p.get("next_action") or "")
             if HIGH_RISK.search(nxt):
                 _make_approval(pid, "请决定：%s 的下一步方向" % p["name"],
@@ -640,17 +686,28 @@ def auto_advance_cycle(trigger="patrol", max_per_round=2):
             picked.append(p)
 
         for p in picked:
+            # ② 无人指令下的自动推断（next_action 为空 → inferred + 低置信度主动询问）
+            if ENG is not None:
+                try:
+                    ENG.infer_next_actions()
+                except Exception:
+                    pass
             ex = do_advance(p, "定时巡检自动推进", trigger="patrol-auto")
-            out.append({"project": p["name"], "ok": ex.get("ok"),
+            out.append({"project": p["name"], "ok": ex.get("ok"), "outcome": ex.get("outcome", ""),
+                        "states": ex.get("states", {}), "no_change": ex.get("no_change", False),
                         "run_id": ex.get("run_id"), "session": ex.get("session_id"),
                         "file": Path(ex.get("file") or "").name,
                         "verified": ex.get("verified")})
-            if ex.get("ok"):
-                G["notify"](p["id"], "主动推进完成 · %s" % p["name"],
-                            "无人指令下已真调度 DSH 原会话并回读校验产物；会话 %s" %
+            if ex.get("ok") and ex.get("outcome") == "advanced":
+                G["notify"](p["id"], "实际推进并验收成功 · %s" % p["name"],
+                            "无人指令下四态全通过：巡检→复核→任务执行→项目状态真实变化并回读确认；会话 %s" %
                             (ex.get("session_id") or "—"), "info")
+            elif ex.get("no_change"):
+                # 不刷屏：重复复核只写机读 events，不发通知
+                G["emit"]("engine.no_change", "%s：重复复核，无项目变化，未记推进" % p["name"],
+                          "info", p["id"], {"digest": str(ex.get("error") or "")[:120]})
             else:
-                G["notify"](p["id"], "主动推进失败 · 已升级提醒",
+                G["notify"](p["id"], "主动推进未达推进态 · 已升级提醒",
                             "%s：%s（有限重试 2 次）" % (p["name"], str(ex.get("error") or "校验未通过")[:100]),
                             "error")
         G["emit"]("auto.advance", "主动闭环完成：候选 %d / 已推进 %d / 其余 %d" % (
@@ -668,7 +725,13 @@ def auto_advance_cycle(trigger="patrol", max_per_round=2):
 
 # ────────────────────────────── 路由接管 ──────────────────────────────
 def handle_get(handler, path):
-    """返回 True = 已处理，主模块 do_GET 直接 return。"""
+    """返回 True = 已处理，主模块 do_GET 直接 return。raw_path 带 query（第 3 参可选）。"""
+    if ENG is not None:
+        try:
+            if ENG.handle_get(handler, path, getattr(handler, "path", path)):
+                return True
+        except Exception as e:
+            G["emit"]("engine.get.error", str(e), "error", data={"exc": traceback.format_exc()[:900]})
     if path.startswith("/static/"):
         fn = re.sub(r"[^A-Za-z0-9_.\-]", "", path[len("/static/"):])
         fp = STATIC / fn
@@ -704,6 +767,12 @@ def handle_get(handler, path):
 
 
 def handle_post(handler, path, body):
+    if ENG is not None:
+        try:
+            if ENG.handle_post(handler, path, body):
+                return True
+        except Exception as e:
+            G["emit"]("engine.post.error", str(e), "error", data={"exc": traceback.format_exc()[:900]})
     if path == "/api/chat":
         try:
             handler._json(chat_post(body))

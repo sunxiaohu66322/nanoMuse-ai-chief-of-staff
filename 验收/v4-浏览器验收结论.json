@@ -1,0 +1,111 @@
+{
+  "at": "2026-11-11T09:30:25.668Z",
+  "url": "http://127.0.0.1:9196/",
+  "browser": "Chromium 1243 (real) via Playwright 1.61.1",
+  "checks": {
+    "s1": true,
+    "s2": true,
+    "s3": true,
+    "s4": true,
+    "s5": true,
+    "s6": true,
+    "s7": true,
+    "s8": true,
+    "s9": true,
+    "s10": true
+  },
+  "pass": {
+    "s1": {
+      "title": "nanoMuse AI 总管 · 项目驾驶舱",
+      "hasProgressTab": true,
+      "readyState": "complete"
+    },
+    "s2": {
+      "evidence": 7,
+      "memory": 7,
+      "inferred": 4,
+      "levels": {
+        "verified": 2,
+        "ai_candidate": 5,
+        "user_confirmed": 0,
+        "not_started": 0
+      },
+      "fourStateRows": 10,
+      "advancedRows": 7,
+      "allFourTrue": true,
+      "formalPlans": 2,
+      "proposedPlans": 0,
+      "evBoardHtmlLen": 1726,
+      "progMeta": "证据 7 条 · 正式计划 2 / 待确认 0 · 四态 10 条"
+    },
+    "s3": {
+      "proposedCreated": true,
+      "beforeFormal": 2,
+      "afterFormal": 3,
+      "chartRows": 3,
+      "ganttSvgRendered": true,
+      "textVisible": true
+    },
+    "s4": {
+      "candidateFound": true,
+      "verifiedAfterClick": true,
+      "policyText": true,
+      "levels": {
+        "verified": 3,
+        "ai_candidate": 4,
+        "user_confirmed": 0,
+        "not_started": 0
+      }
+    },
+    "s5": {
+      "infBefore": 4,
+      "infAfter": 4,
+      "noFakeAsFact": true
+    },
+    "s6a": {
+      "replied": true,
+      "mentionsRealProject": true
+    },
+    "s6b": {
+      "pendingApprovals": 10,
+      "stoppedText": true
+    },
+    "s7": {
+      "historyBars": 36,
+      "unscheduled": 31,
+      "separationNotice": true,
+      "pointsToProgressTab": true
+    },
+    "s8": {
+      "patrolAdvanced": true,
+      "newEvents": 0,
+      "before": "2026-11-11T17:29:09+08:00",
+      "after": "2026-11-11T17:30:18+08:00"
+    },
+    "s9": {
+      "chatKept": 60,
+      "evidenceKept": 7,
+      "projectsKept": 9,
+      "domOk": true
+    },
+    "s10": {
+      "pageHookedErrors": 0,
+      "realPageErrors": 0,
+      "f404": 0,
+      "samples": []
+    }
+  },
+  "allPassed": true,
+  "shots": [
+    "v4-01-首页-含进度计划页签.png",
+    "v4-02-进度与计划-四态证据记忆.png",
+    "v4-03-建议排期批准为正式计划甘特.png",
+    "v4-04-四级证据与完成率口径.png",
+    "v4-05-AI对话与高风险审批闸门.png",
+    "v4-06-历史时间线与正式计划分离.png",
+    "v4-07-无人值守巡检后.png",
+    "v4-08-刷新后保持.png"
+  ],
+  "totalShots": 8,
+  "logCount": 11
+}

@@ -1,0 +1,95 @@
+{
+  "/health": {
+    "ok": true,
+    "service": "nanoMuse 主动型 AI 项目总管",
+    "port": 9196,
+    "patrol_seconds": 60,
+    "last_patrol": "2026-11-11T12:27:42+08:00",
+    "db": "G:\\Users\\Administrator\\Documents\\deepseek-harness\\default-workspace\\nanoMuse项目总管\\data\\state.db",
+    "persisted": true,
+    "time": "2026-11-11T16:49:39+08:00"
+  },
+  "/api/progress/board": {
+    "evidence": 0,
+    "levels": {
+      "verified": 0,
+      "ai_candidate": 0,
+      "user_confirmed": 0,
+      "not_started": 0
+    },
+    "memory": 0,
+    "inferred": 0,
+    "states": 0
+  },
+  "/api/progress/plans": {
+    "plans": 0,
+    "formal": 0,
+    "proposed": 0
+  },
+  "/api/progress/states": {
+    "states": 0
+  },
+  "/api/gantt": {
+    "gantt_tasks": 36,
+    "unsched": 31
+  },
+  "/api/state": {
+    "projects": 9,
+    "counts": {
+      "awaiting_decision": 3,
+      "stalled": 1,
+      "active": 5
+    }
+  },
+  "infer": {
+    "ok": true,
+    "inferred": 2,
+    "asked": 1,
+    "items": [
+      {
+        "project": "换脸与人脸资产系统",
+        "candidate": "核验并推进里程碑：0 真实基线（当前 0%，完成条件：端口/进程/文件哈希/任务结构现场实测，历史结论逐条核对并记录差异）",
+        "confidence": "mid"
+      },
+      {
+        "project": "上货台7.0 AI运营中心",
+        "candidate": "核对最近真实事件并登记下一条可验证证据",
+        "confidence": "low"
+      }
+    ]
+  },
+  "propose": {
+    "ok": true,
+    "plan_id": "PLAN-18373edb89d311ab",
+    "status": "proposed",
+    "note": "仅为建议排期，已标待确认；人工批准后才是正式计划。"
+  },
+  "approve": {
+    "ok": true,
+    "plan_id": "PLAN-18373edb89d311ab",
+    "status": "approved",
+    "plan": {
+      "id": "PLAN-18373edb89d311ab",
+      "project_id": "p-b0e5dcc0",
+      "name": "v4自检·M3对话级导航联调",
+      "start_date": "2026-11-12",
+      "end_date": "2026-11-18",
+      "dependencies": "[]",
+      "planned_progress": 0.0,
+      "status": "approved",
+      "source": "v4自检",
+      "proposed_by": "AI 总管",
+      "decided_at": "2026-11-11T16:49:41+08:00",
+      "updated_at": "2026-11-11T16:49:41+08:00"
+    },
+    "note": "已批准，成为正式计划"
+  },
+  "plans_after": {
+    "formal": 1,
+    "proposed": 0,
+    "chart": 1
+  },
+  "evidence_level": {
+    "note": "暂无候选证据，跳过（如实登记）"
+  }
+}

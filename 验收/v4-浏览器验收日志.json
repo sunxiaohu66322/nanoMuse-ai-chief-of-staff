@@ -1,0 +1,11 @@
+{"at":"2026-11-11T09:28:39.851Z","k":"s1-home","v":{"title":"nanoMuse AI 总管 · 项目驾驶舱","hasProgressTab":true,"readyState":"complete"}}
+{"at":"2026-11-11T09:28:42.484Z","k":"s2-progress-view","v":{"evidence":7,"memory":7,"inferred":4,"levels":{"verified":2,"ai_candidate":5,"user_confirmed":0,"not_started":0},"fourStateRows":10,"advancedRows":7,"allFourTrue":true,"formalPlans":2,"proposedPlans":0,"evBoardHtmlLen":1726,"progMeta":"证据 7 条 · 正式计划 2 / 待确认 0 · 四态 10 条"}}
+{"at":"2026-11-11T09:28:45.272Z","k":"s3-plan-approve","v":{"proposedCreated":true,"beforeFormal":2,"afterFormal":3,"chartRows":3,"ganttSvgRendered":true,"textVisible":true}}
+{"at":"2026-11-11T09:28:46.422Z","k":"s4-evidence-levels","v":{"candidateFound":true,"verifiedAfterClick":true,"policyText":true,"levels":{"verified":3,"ai_candidate":4,"user_confirmed":0,"not_started":0}}}
+{"at":"2026-11-11T09:28:47.845Z","k":"s5-infer","v":{"infBefore":4,"infAfter":4,"noFakeAsFact":true}}
+{"at":"2026-11-11T09:29:11.172Z","k":"s6-chat-and-approval","v":{"replied":true,"mentionsRealProject":true,"pendingApprovals":10,"stoppedText":true}}
+{"at":"2026-11-11T09:29:13.106Z","k":"s7-history-vs-plan","v":{"historyBars":36,"unscheduled":31,"separationNotice":true,"pointsToProgressTab":true}}
+{"at":"2026-11-11T09:29:13.272Z","k":"s8-wait-start","v":{"lastPatrolBefore":"2026-11-11T17:29:09+08:00","eventsBefore":200}}
+{"at":"2026-11-11T09:30:23.323Z","k":"s8-unattended-patrol","v":{"patrolAdvanced":true,"newEvents":0,"before":"2026-11-11T17:29:09+08:00","after":"2026-11-11T17:30:18+08:00"}}
+{"at":"2026-11-11T09:30:25.176Z","k":"s9-reload-persist","v":{"chatKept":60,"evidenceKept":7,"projectsKept":9,"domOk":true}}
+{"at":"2026-11-11T09:30:25.668Z","k":"s10-console","v":{"pageHookedErrors":0,"realPageErrors":0,"f404":0,"samples":[]}}

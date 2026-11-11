@@ -293,7 +293,8 @@ footer{padding:16px 22px 26px;color:var(--dim2);font-size:11.5px;text-align:cent
 <div class="modbar" id="modbar">
   <button class="mod on" data-v="overview" onclick="setView('overview')">▦ 驾驶舱首页</button>
   <button class="mod" data-v="chat" onclick="setView('chat')">◈ AI 对话</button>
-  <button class="mod" data-v="gantt" onclick="setView('gantt')">▤ 进展时间轴</button>
+  <button class="mod" data-v="gantt" onclick="setView('gantt')">▤ 历史时间线</button>
+  <button class="mod" data-v="progress" onclick="setView('progress')">◧ 进度与计划 <b id="mProg">0</b></button>
   <button class="mod" data-v="approval" onclick="setView('approval')">⚑ 待我拍板 <b id="mAppr">0</b></button>
   <button class="mod" data-v="logs" onclick="setView('logs')">≡ 高级设置 / 技术日志</button>
   <button class="mod" data-v="notice" onclick="setView('notice')">◉ 主动提醒</button>
@@ -424,7 +425,7 @@ footer{padding:16px 22px 26px;color:var(--dim2);font-size:11.5px;text-align:cent
         <button class="btn sm" onclick="loadGantt(true)">重建并同步</button>
         <span class="mono" id="gMeta">—</span>
       </div>
-      <div class="gnotice">这些横条是 <b>已经真实发生过的观察记录</b>（快照与任务状态变更的真实时间戳），<b>不是未来的项目计划甘特</b>。没有计划日期的里程碑单独列在下方「待排期」，不编造时间。点击任意横条可打开对应项目的真实详情。</div>
+      <div class="gnotice">这是 <b>历史活动时间线</b>：横条取自快照与任务状态变更的真实时间戳，<b>只读、不可改、不伪装成计划</b>。没有计划日期的里程碑列在下方「待排期」。<b>正式计划甘特与建议排期请点顶部「◧ 进度与计划」页签</b>，两者分开、互不混淆。点击任意横条可打开对应项目的真实详情。</div>
       <div id="ganttBox"><div class="empty" style="color:#666">时间轴载入中…</div></div>
       <h3 style="font-size:12.5px;color:var(--brand);margin:14px 0 6px">点击详情</h3>
       <div id="ganttDetail"><div class="empty">点击上方任意横条查看真实状态与来源</div></div>
@@ -432,6 +433,43 @@ footer{padding:16px 22px 26px;color:var(--dim2);font-size:11.5px;text-align:cent
       <div class="unsched-wrap" style="max-height:220px;overflow:auto"><div id="ganttUnsched"></div></div>
     </div>
   </section>
+</div>
+
+<!-- ========== 进度与计划（第二阶段：四态 / 推断 / 正式甘特 / 记忆 / 证据） ========== -->
+<div class="view" id="v-progress">
+  <section class="panel"><div class="panel-b">
+    <div class="gtoolbar">
+      <h2 style="font-size:16px;font-weight:800">进度真实性 · 计划甘特</h2>
+      <button class="btn sm" onclick="loadProgress(true)">刷新全部</button>
+      <button class="btn sm" onclick="inferNext()">推断空下一步</button>
+      <span class="mono" id="progMeta">—</span>
+    </div>
+    <div class="gnotice">四条硬规矩：<b>①</b> 巡检 / 复核 / 生成报告 / 写日志 <b>不算项目进展</b>；<b>②</b> 推断的下一步一律标 <b>inferred</b>，低把握主动来问；<b>③</b> 历史时间只读，AI 建议排期一律「待确认」，<b>你批准后才成为正式计划</b>；<b>④</b> 完成率只认已验证 / 你确认的证据，没证据写「待核实」。</div>
+
+    <h3 style="font-size:12.5px;color:var(--brand);margin:14px 0 6px">正式计划甘特（仅已批准的排期才画条）</h3>
+    <div id="planGanttBox"><div class="empty">载入中…</div></div>
+    <div class="row" style="margin:8px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input id="planName" placeholder="计划名，如：M3 对话级导航联调" style="min-width:220px;padding:6px 10px;border:1px solid var(--line);border-radius:8px">
+      <input id="planStart" placeholder="开始 YYYY-MM-DD" style="width:140px;padding:6px 10px;border:1px solid var(--line);border-radius:8px">
+      <input id="planEnd" placeholder="结束 YYYY-MM-DD" style="width:140px;padding:6px 10px;border:1px solid var(--line);border-radius:8px">
+      <select id="planPid" style="padding:6px 10px;border:1px solid var(--line);border-radius:8px"></select>
+      <button class="btn sm pri" onclick="proposePlan()">提交建议排期（待确认）</button>
+    </div>
+    <div id="planList" class="scroll" style="max-height:220px;overflow:auto"></div>
+
+    <h3 style="font-size:12.5px;color:var(--brand);margin:16px 0 6px">四态推进记录（巡检 / 复核 / 执行 / 实际推进验收）</h3>
+    <div id="advStates" class="scroll" style="max-height:200px;overflow:auto"></div>
+
+    <h3 style="font-size:12.5px;color:var(--brand);margin:16px 0 6px">进度证据四级（只有「已验证 / 已确认」参与完成率）</h3>
+    <div id="evLevels" style="margin-bottom:8px"></div>
+    <div id="evBoard" class="scroll" style="max-height:230px;overflow:auto"></div>
+
+    <h3 style="font-size:12.5px;color:var(--brand);margin:16px 0 6px">自动推断下一步（inferred，非事实）</h3>
+    <div id="inferBoard" class="scroll" style="max-height:170px;overflow:auto"></div>
+
+    <h3 style="font-size:12.5px;color:var(--brand);margin:16px 0 6px">项目长期记忆（决策 / 要求 / 否决方案 / 阶段总结）</h3>
+    <div id="memBoard" class="scroll" style="max-height:190px;overflow:auto"></div>
+  </div></section>
 </div>
 
 <!-- ========== 待审批 ========== -->
@@ -501,6 +539,7 @@ function setView(v){
   document.querySelectorAll('.mod').forEach(e=>e.classList.toggle('on',e.dataset.v===v));
   if(v==='chat'){loadChat();loadAuto();loadCtx()}
   if(v==='gantt'){loadGantt(false)}
+  if(v==='progress'){loadProgress()}
   if(v==='approval')renderApprovalView();
   if(v==='logs')renderLogView();
   if(v==='notice')renderNoticeView();
@@ -898,13 +937,65 @@ function renderLogView(){
 function renderNoticeView(){
   $('allNotices').innerHTML=(S.notifications||[]).slice(0,60).map(n=>`<div class="notice"><b>${esc(n.title)}</b> · <span class="mono">${esc(fmtT(n.at))} · ${esc(n.via||'')}</span><br>${esc(n.body)}</div>`).join('')||'<div class="empty">暂无通知</div>';
 }
+/* ───────── 第二阶段：进度真实性 / 正式计划甘特 / 长期记忆 ───────── */
+let PDATA=null;
+function lvTag(l){return {verified:'已验证',user_confirmed:'已确认',ai_candidate:'AI候选',not_started:'未开始'}[l]||l}
+function planRowsHtml(plans){
+  if(!plans.length)return '<div class="empty">暂无建议排期。上面填一条提交后为「待确认」，批准后才进正式计划甘特。</div>';
+  return '<table class="mini-table"><tr><th>计划</th><th>项目</th><th>起止</th><th>状态</th><th>操作</th></tr>'+
+    plans.map(r=>`<tr><td>${esc(r.name)}<div class="mono">${esc(r.id)}</div></td><td>${esc((S.projects.find(x=>x.id===r.project_id)||{}).name||r.project_id)}</td><td class="mono">${esc(r.start_date||'待排期')} → ${esc(r.end_date||'待排期')}</td><td>${r.status==='approved'?'<b style="color:var(--green)">正式计划</b>':(r.status==='rejected'?'已否决':'<b style="color:#b8790a">待确认</b>')}</td><td>${r.status==='proposed'?`<button class="btn sm pri" onclick="decidePlan('${esc(r.id)}','approve')">批准</button> <button class="btn sm" onclick="decidePlan('${esc(r.id)}','reject')">否决</button>`:'—'}</td></tr>`).join('')+'</table>';
+}
+function renderPlans(d){
+  const plans=d.plans||[];
+  $('planList').innerHTML=planRowsHtml(plans);
+  const pend=plans.filter(x=>x.status==='proposed').length;
+  const b=$('mProg'); if(b)b.textContent=pend;
+  const box=$('planGanttBox'), ch=d.chart||[];
+  if(!ch.length){box.innerHTML='<div class="empty">还没有「已批准的正式计划」，因此正式计划甘特为空。<b>历史时间线在另一页签</b>，两者不混。</div>';return}
+  if(typeof Gantt==='undefined'){box.innerHTML='<div class="empty">甘特组件未加载</div>';return}
+  box.innerHTML='<div id="planSvg"></div>';
+  try{new Gantt('#planSvg',ch,{view_mode:'Week',date_format:'YYYY-MM-DD',language:'zh',readonly:true,readonly_dates:true,readonly_progress:true,bar_height:22,padding:16});}
+  catch(e){box.innerHTML='<div class="empty">正式计划渲染异常：'+esc(e)+'</div>'}
+}
+function renderProgress(d){
+  PDATA=d;
+  const lv=d.levels||{}, total=Object.values(lv).reduce((a,b)=>a+b,0);
+  $('evLevels').innerHTML=`<div class="sub">共 ${total} 条证据：已验证 <b>${lv.verified||0}</b> · 已确认 <b>${lv.user_confirmed||0}</b> · AI候选 <b>${lv.ai_candidate||0}</b> · 未开始 <b>${lv.not_started||0}</b>。仅前两级参与完成率；无证据一律「待核实」，不编造。</div>`;
+  $('evBoard').innerHTML='<table class="mini-table"><tr><th>候选里程碑</th><th>证据引用</th><th>级别</th><th>定为已验证</th></tr>'+
+    (d.evidence||[]).map(e=>`<tr><td>${esc(short(e.milestone,40))}<div class="mono">${esc(short(e.condition,50))}</div></td><td class="mono">${esc(short(e.evidence_ref,44))}</td><td>${lvTag(e.level)}</td><td>${e.level!=='verified'?`<button class="btn sm" onclick="setEvLevel(${e.id},'verified')">标记已验证</button>`:'已验证'}</td></tr>`).join('')+'</table>'||'<div class="empty">暂无结构化证据</div>';
+  $('inferBoard').innerHTML=(d.inferred||[]).map(r=>`<div class="task"><span class="st pending">inferred</span><span style="flex:1;min-width:0">${esc(r.candidate)}<div class="mono">${esc(r.confidence)} · ${esc(r.source)} · ${esc(fmtT(r.at))}</div></span></div>`).join('')||'<div class="empty">暂无推断候选（next_action 为空的项目才会推断）</div>';
+  $('memBoard').innerHTML=(d.memory||[]).map(r=>`<div class="task"><span class="st">${esc(lvTag(r.kind)||r.kind)}</span><span style="flex:1;min-width:0">${esc(r.title)}<div class="mono">${esc(short(r.body,90))}</div></span></div>`).join('')||'<div class="empty">暂无项目长期记忆</div>';
+}
+function renderAdvStates(rows){
+  $('advStates').innerHTML='<table class="mini-table"><tr><th>时间</th><th>项目</th><th>巡检</th><th>复核</th><th>执行</th><th>实际推进验收</th><th>结论</th></tr>'+
+    rows.map(r=>`<tr><td class="mono">${esc(fmtT(r.at))}</td><td>${esc(short((S.projects.find(x=>x.id===r.project_id)||{}).name||r.project_id,20))}</td><td>${r.s_patrol?'✓':'—'}</td><td>${r.s_review?'✓':'—'}</td><td>${r.s_executed?'✓':'—'}</td><td>${r.s_advanced?'<b style="color:var(--green)">✓</b>':'—'}</td><td>${esc(r.outcome)}<div class="mono">${esc(short(r.reason,60))}</div></td></tr>`).join('')+'</table>'||'<div class="empty">暂无四态记录</div>';
+}
+function loadProgress(){
+  return Promise.all([api('/api/progress/board'),api('/api/progress/plans'),api('/api/progress/states')]).then(([b,p,s])=>{
+    renderProgress(b); renderPlans(p); renderAdvStates(s.states||[]);
+    const sel=$('planPid');
+    if(sel&&!sel.options.length)sel.innerHTML=S.projects.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');
+    $('progMeta').textContent=`证据 ${(b.evidence||[]).length} 条 · 正式计划 ${p.formal_count||0} / 待确认 ${p.proposed_count||0} · 四态 ${(s.states||[]).length} 条`;
+    return true;
+  }).catch(e=>{console.error('progress',e);toast('进度数据载入失败：'+e);return false});
+}
+function inferNext(){post('/api/progress/infer',{}).then(r=>{toast('推断完成：新增 '+(r.inferred||0)+' 条候选，低把握询问 '+(r.asked||0));loadProgress()})}
+function proposePlan(){
+  const name=$('planName').value.trim(), s=$('planStart').value.trim(), e=$('planEnd').value.trim(), pid=$('planPid').value;
+  if(!name||!pid){toast('请填计划名并选项目');return}
+  if((s&&!/^\d{4}-\d{2}-\d{2}$/.test(s))||(e&&!/^\d{4}-\d{2}-\d{2}$/.test(e))){toast('日期格式 YYYY-MM-DD，或留空待排期');return}
+  post('/api/progress/plan/propose',{project_id:pid,name,start_date:s,end_date:e,dependencies:[],source:'总控台人工提交·AI 建议排期'})
+    .then(r=>{toast(r.ok?'已提交建议排期（待确认）':('失败：'+(r.error||'')));$('planName').value='';loadProgress()});
+}
+function decidePlan(id,d){post('/api/progress/plan/'+encodeURIComponent(id)+'/'+(d==='approve'?'approve':'reject'),{}).then(r=>{toast(r.ok?('计划 '+id+' → '+r.status):('失败：'+(r.error||'')));loadProgress()})}
+function setEvLevel(id,l){post('/api/progress/evidence/'+id+'/level',{level:l}).then(r=>{toast(r.ok?'证据已标记 '+lvTag(l):('失败：'+(r.error||'')));loadProgress()})}
 function toggleLog(){const p=$('logpanel');p.style.display=p.style.display==='block'?'none':'block'}
 window.onerror=function(m,s,l,c,e){post('/api/log/page',{event:'js_error',message:'window.onerror '+m+' @'+s+':'+l});};
 window.addEventListener('unhandledrejection',e=>post('/api/log/page',{event:'js_error',message:'unhandledrejection '+String(e.reason)}));
 post('/api/log/page',{event:'view',message:'驾驶舱首页加载'});
 load().then(()=>{loadChat();loadAuto();loadCtx()});
 setInterval(load,5000);
-setInterval(()=>api('/api/health').then(h=>{setTxt('lastPatrol',fmtT(h.last_patrol))}).catch(()=>{}),10000);
+setInterval(()=>api('/health').then(h=>{setTxt('lastPatrol',fmtT(h.last_patrol))}).catch(()=>{}),10000);
 </script>
 </body>
 </html>

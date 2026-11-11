@@ -60,3 +60,25 @@ CREATE TABLE auto_runs(
 CREATE TABLE dsh_sessions(
  id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, project_id TEXT, session_id TEXT,
  kind TEXT, task TEXT, outcome TEXT, final_text TEXT, elapsed_ms INTEGER);
+
+-- v4 第二阶段新增（进度真实性 / 长期记忆 / 正式计划甘特 / 四态推进）
+-- 真源仍是同一份 state.db；以下表只由 总管进度引擎.py 写入，不覆盖上游采集结果。
+CREATE TABLE project_memory(
+ id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, project_id TEXT,
+ kind TEXT, title TEXT, body TEXT, source TEXT, confidence TEXT, digest TEXT);
+CREATE TABLE progress_evidence(
+ id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, project_id TEXT,
+ milestone TEXT, condition TEXT, evidence_ref TEXT,
+ level TEXT DEFAULT 'ai_candidate', confidence TEXT, source TEXT, digest TEXT, session_id TEXT);
+CREATE TABLE next_action_inferred(
+ id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, project_id TEXT,
+ candidate TEXT, source TEXT, confidence TEXT, status TEXT DEFAULT 'inferred', digest TEXT);
+CREATE TABLE project_plans(
+ id TEXT PRIMARY KEY, project_id TEXT, name TEXT, start_date TEXT, end_date TEXT,
+ dependencies TEXT, planned_progress REAL DEFAULT 0, status TEXT DEFAULT 'proposed',
+ source TEXT, proposed_by TEXT, decided_at TEXT, updated_at TEXT);
+CREATE TABLE advance_states(
+ id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT, project_id TEXT, trigger TEXT,
+ s_patrol INTEGER DEFAULT 0, s_review INTEGER DEFAULT 0,
+ s_executed INTEGER DEFAULT 0, s_advanced INTEGER DEFAULT 0,
+ outcome TEXT, reason TEXT, digest TEXT, session_id TEXT, file TEXT);
