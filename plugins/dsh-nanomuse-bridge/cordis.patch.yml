@@ -1,0 +1,9 @@
+# Mount the nanoMuse native session bridge. One Host row; the plugin injects
+# `sessions` (session/event delivery requires a declared interest), `agents`
+# (followup/steer to an existing Agent) and `uiWorkspace` (open original session).
+- insert:
+    - id: nanomuse-bridge
+      name: '@local/dsh-nanomuse-bridge'
+      config:
+        endpoint: 'http://127.0.0.1:9196/api/dsh-bridge/event'
+        controlPort: 9203

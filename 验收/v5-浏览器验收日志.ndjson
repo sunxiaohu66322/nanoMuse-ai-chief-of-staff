@@ -1,0 +1,9 @@
+{"at":"2026-11-11T14:00:15.191Z","k":"s1-home-modbar","v":{"ok":true,"detail":{"count":8,"mods":["overview","chat","gantt","progress","approval","sessions","logs","notice"]}}}
+{"at":"2026-11-11T14:00:15.955Z","k":"s2-sessions-view","v":{"ok":true,"detail":{"stat":"桥接插件：在线 · 真实事件 84 条 · 会话索引 831 个 · 指令 5 条 · 待确认 388 · 最近增量扫描 826 份元数据","sessionCards":59}}}
+{"at":"2026-11-11T14:00:16.703Z","k":"s3-real-events","v":{"ok":true,"detail":{"events_total":84,"sessions":400,"linked":12,"pending":388,"meta_files":826,"last_reindex":{"ok":true,"files_total":826,"new_or_changed":826,"upserted":826,"linked":22,"pending":804,"incremental":true,"watermark":"2026-11-11T21:17:05"}}}}
+{"at":"2026-11-11T14:00:16.718Z","k":"s4-project-consistent","v":{"ok":true,"detail":{"project_id":"p-0a83efab","name":"抖音知识库采集系统","tasks":3,"has_history":true}}}
+{"at":"2026-11-11T14:00:16.726Z","k":"s5-actions-present","v":{"ok":true,"detail":{"buttons":["增量刷新会话索引","打开原会话","下发指令","确认归属"]}}}
+{"at":"2026-11-11T14:00:17.266Z","k":"s6-high-risk-gate","v":{"ok":true,"detail":{"command":{"ok":true,"status":"needs_approval","command_id":6,"message":"高风险操作已停止执行，已生成审批事项。"},"pendingApprovals":3}}}
+{"at":"2026-11-11T14:00:17.872Z","k":"s7-no-silent-new-session","v":{"ok":true,"detail":{"status":"unrecoverable","message":"该会话当前不可恢复：该会话当前没有活跃 Agent：可能已结束/属于其它运行面。按任务书要求不静默新建 headless 替代会话；请在 DSH 桌面打开原会话后再下发。"}}}
+{"at":"2026-11-11T14:00:18.213Z","k":"s8-refresh-and-console","v":{"ok":true,"detail":{"sessionCardsAfterReload":59,"newPageErrors":[],"new404":[]}}}
+{"at":"2026-11-11T14:00:21.276Z","k":"s9-no-full-history-scan","v":{"ok":true,"detail":{"watermark":"1794403025.2227476","reindex":{"ok":true,"files_total":826,"new_or_changed":826,"upserted":826,"linked":22,"pending":804,"incremental":true,"watermark":"2026-11-11T21:17:05"}}}}

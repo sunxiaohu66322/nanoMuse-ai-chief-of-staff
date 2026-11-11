@@ -1,0 +1,28 @@
+# 隔离 overlay：只给这次验证用的 headless 会话加载桥接插件 + 本机 wb 模型。
+# 不写 profiles/headless/package.json，不改 desktop 生产 profile，不装依赖。
+# name 用 file:// 绝对路径，Cordis loader 直接按 URL 载入本地 ES module。
+- insert:
+    - id: nanomuse-bridge
+      name: 'file:///G:/Users/Administrator/Documents/deepseek-harness/default-workspace/plugins/dsh-nanomuse-bridge/index.js'
+      config:
+        endpoint: 'http://127.0.0.1:9196/api/dsh-bridge/event'
+        controlPort: 9203
+        cacheDir: 'G:/Users/Administrator/Documents/deepseek-harness/default-workspace/nanoMuse项目总管/data/bridge-cache'
+- id: llm-pi-ai
+  name: "@deepseek-ai/dsh-llm-pi-ai"
+  config:
+    providers:
+      wb:
+        displayName: "总管·本机wb代理"
+        apiKeyEnv: WB_API_KEY
+        api: openai-completions
+        baseURL: http://127.0.0.1:7864/v1
+        models:
+          - id: glm-5.3-flash
+            name: GLM-5.3-Flash
+            maxTokens: 64000
+- id: agent-default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
+  config:
+    provider: wb
+    model: glm-5.3-flash

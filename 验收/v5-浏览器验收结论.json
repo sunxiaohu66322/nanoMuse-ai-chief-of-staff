@@ -1,0 +1,123 @@
+{
+  "at": "2026-11-11T14:00:21.481Z",
+  "version": "v5",
+  "allPassed": true,
+  "checks": {
+    "s1-home-modbar": {
+      "ok": true,
+      "detail": {
+        "count": 8,
+        "mods": [
+          "overview",
+          "chat",
+          "gantt",
+          "progress",
+          "approval",
+          "sessions",
+          "logs",
+          "notice"
+        ]
+      }
+    },
+    "s2-sessions-view": {
+      "ok": true,
+      "detail": {
+        "stat": "桥接插件：在线 · 真实事件 84 条 · 会话索引 831 个 · 指令 5 条 · 待确认 388 · 最近增量扫描 826 份元数据",
+        "sessionCards": 59
+      }
+    },
+    "s3-real-events": {
+      "ok": true,
+      "detail": {
+        "events_total": 84,
+        "sessions": 400,
+        "linked": 12,
+        "pending": 388,
+        "meta_files": 826,
+        "last_reindex": {
+          "ok": true,
+          "files_total": 826,
+          "new_or_changed": 826,
+          "upserted": 826,
+          "linked": 22,
+          "pending": 804,
+          "incremental": true,
+          "watermark": "2026-11-11T21:17:05"
+        }
+      }
+    },
+    "s4-project-consistent": {
+      "ok": true,
+      "detail": {
+        "project_id": "p-0a83efab",
+        "name": "抖音知识库采集系统",
+        "tasks": 3,
+        "has_history": true
+      }
+    },
+    "s5-actions-present": {
+      "ok": true,
+      "detail": {
+        "buttons": [
+          "增量刷新会话索引",
+          "打开原会话",
+          "下发指令",
+          "确认归属"
+        ]
+      }
+    },
+    "s6-high-risk-gate": {
+      "ok": true,
+      "detail": {
+        "command": {
+          "ok": true,
+          "status": "needs_approval",
+          "command_id": 6,
+          "message": "高风险操作已停止执行，已生成审批事项。"
+        },
+        "pendingApprovals": 3
+      }
+    },
+    "s7-no-silent-new-session": {
+      "ok": true,
+      "detail": {
+        "status": "unrecoverable",
+        "message": "该会话当前不可恢复：该会话当前没有活跃 Agent：可能已结束/属于其它运行面。按任务书要求不静默新建 headless 替代会话；请在 DSH 桌面打开原会话后再下发。"
+      }
+    },
+    "s8-refresh-and-console": {
+      "ok": true,
+      "detail": {
+        "sessionCardsAfterReload": 59,
+        "newPageErrors": [],
+        "new404": []
+      }
+    },
+    "s9-no-full-history-scan": {
+      "ok": true,
+      "detail": {
+        "watermark": "1794403025.2227476",
+        "reindex": {
+          "ok": true,
+          "files_total": 826,
+          "new_or_changed": 826,
+          "upserted": 826,
+          "linked": 22,
+          "pending": 804,
+          "incremental": true,
+          "watermark": "2026-11-11T21:17:05"
+        }
+      }
+    }
+  },
+  "shots": [
+    "v5-01-首页.png",
+    "v5-02-原会话页签.png",
+    "v5-03-刷新后原会话.png"
+  ],
+  "pageErrors": [
+    "console.error: Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "f404": [],
+  "url": "http://127.0.0.1:9196/"
+}

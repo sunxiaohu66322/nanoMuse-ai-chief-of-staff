@@ -296,6 +296,7 @@ footer{padding:16px 22px 26px;color:var(--dim2);font-size:11.5px;text-align:cent
   <button class="mod" data-v="gantt" onclick="setView('gantt')">▤ 历史时间线</button>
   <button class="mod" data-v="progress" onclick="setView('progress')">◧ 进度与计划 <b id="mProg">0</b></button>
   <button class="mod" data-v="approval" onclick="setView('approval')">⚑ 待我拍板 <b id="mAppr">0</b></button>
+  <button class="mod" data-v="sessions" onclick="setView('sessions')">⤴ 原会话 <b id="mSess">0</b></button>
   <button class="mod" data-v="logs" onclick="setView('logs')">≡ 高级设置 / 技术日志</button>
   <button class="mod" data-v="notice" onclick="setView('notice')">◉ 主动提醒</button>
 </div>
@@ -493,6 +494,23 @@ footer{padding:16px 22px 26px;color:var(--dim2);font-size:11.5px;text-align:cent
   </div></section>
 </div>
 
+<!-- ========== 原会话（DSH 原生桥接） ========== -->
+<div class="view" id="v-sessions">
+  <section class="panel"><div class="panel-b">
+    <h2 style="font-size:16px;font-weight:800;margin-bottom:8px">⤴ 项目 → DSH 原会话</h2>
+    <div class="sub" style="font-size:12px;color:var(--dim);margin-bottom:10px">
+      数据来自 DSH 官方 session/event 主动推送（增量、去重、断线补传）；会话索引只读元数据，不读全部聊天历史。
+      点「打开原会话」走桌面原生定位；「下发指令」走官方 followup/steer，已结束会话明确提示不可恢复，绝不静默新建。
+    </div>
+    <div id="bridgeStat" class="sub" style="margin-bottom:10px">读取桥接状态…</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="btn sm" onclick="post('/api/bridge/reindex',{incremental:true}).then(r=>{toast('增量索引已启动（只读元数据）');setTimeout(loadSessions,1500)})">增量刷新会话索引</button>
+      <span class="sub" style="align-self:center">关联不确定的会话一律「待确认」，不强行归类。</span>
+    </div>
+    <div id="sessBox"><div class="empty">正在读取真实会话索引…</div></div>
+  </div></section>
+</div>
+
 <!-- ========== 主动提醒 ========== -->
 <div class="view" id="v-notice">
   <section class="panel"><div class="panel-b">
@@ -543,7 +561,67 @@ function setView(v){
   if(v==='approval')renderApprovalView();
   if(v==='logs')renderLogView();
   if(v==='notice')renderNoticeView();
+  if(v==='sessions')loadSessions();
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ───────── ⑦ 原会话（DSH 原生桥接） ───────── */
+async function loadSessions(){
+  try{
+    const [v,st]=await Promise.all([api('/api/bridge/sessions'),api('/api/bridge/status')]);
+    const n=v.counts||{}, cs=st.control_state||{};
+    const sb=$('bridgeStat');
+    if(sb)sb.innerHTML='桥接插件：<b>'+(st.control_reachable&&cs.ok?'在线':'当前未运行（事件已落库，桌面挂载后自动补传）')+'</b> · '
+      +'真实事件 <b>'+esc(st.events_total)+'</b> 条 · 会话索引 <b>'+esc(st.sessions_indexed)+'</b> 个 · '
+      +'指令 <b>'+esc(st.commands_total)+'</b> 条 · 待确认 <b>'+esc(n.pending||0)+'</b> · '
+      +'最近增量扫描 <b>'+esc(st.last_reindex&&st.last_reindex.new_or_changed||0)+'</b> 份元数据';
+    setTxt('mSess',n.linked||0);
+    const box=$('sessBox'); if(!box)return;
+    const pmap={}; (v.projects||[]).forEach(p=>pmap[p.id]=p.name);
+    const groups=v.by_project||{}, keys=Object.keys(groups).sort((a,b)=>{
+      if(a==='__pending__')return 1; if(b==='__pending__')return -1; return a.localeCompare(b);
+    });
+    let h='';
+    for(const k of keys){
+      const rows=groups[k]||[]; if(!rows.length)continue;
+      const title=k==='__pending__'?'待确认归属（不强归类）':(pmap[k]||k);
+      h+='<div style="margin:14px 0 8px;font-weight:800;font-size:14px">'+esc(title)
+        +' <span class="sub" style="font-weight:400">· '+rows.length+' 个原始 DSH 会话</span></div>'
+        +'<div style="display:grid;gap:8px">';
+      for(const s of rows.slice(0,40)){
+        const sid=String(s.session_id||''), sv=uid(sid);
+        h+='<div style="border:1px solid var(--line);border-radius:10px;padding:10px">'
+          +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+          +'<span class="mono" style="font-size:11px">'+esc(sid.slice(0,34))+'</span>'
+          +'<span class="badge" style="font-size:11px">'+(s.link_status==='linked'?'已关联':'待确认')+'</span>'
+          +'<span class="sub" style="font-size:11px">依据 '+esc(s.link_basis||'—')+' · '+esc(s.last_event||'—')+' · '+esc(fmtT(s.updated_at))+'</span>'
+          +'</div>'
+          +'<div style="margin:6px 0;font-size:13px"><b>'+esc(short(s.title||'未命名会话',60))+'</b></div>'
+          +(s.latest_summary?'<div class="sub" style="font-size:12px;margin-bottom:6px">'+esc(short(s.latest_summary,120))+'</div>':'')
+          +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+          +'<button class="btn sm" onclick="bridgeCmd(\''+sv+'\',\'open\')">打开原会话</button>'
+          +'<button class="btn sm" onclick="bridgeAsk(\''+sv+'\',\'followup\')">下发指令</button>'
+          +(k==='__pending__'?'<select id="link-'+sv+'" class="btn sm">'+(v.projects||[]).map(p=>'<option value="'+uid(p.id)+'">'+esc(short(p.name,18))+'</option>').join('')+'</select>'
+             +'<button class="btn sm" onclick="bridgeLink(\''+sv+'\')">确认归属</button>':'')
+          +'</div></div>';
+      }
+      h+='</div>';
+    }
+    if(!h)h='<div class="empty">还没有会话索引，点上面「增量刷新会话索引」。</div>';
+    box.innerHTML=h;
+  }catch(e){const b=$('sessBox');if(b)b.innerHTML='<div class="empty">读取失败：'+esc(e.message||e)+'</div>'}
+}
+function bridgeCmd(sid,mode){post('/api/bridge/command',{session_id:sid,mode:mode,text:''}).then(r=>toast(r.message||r.status||'已请求'))}
+function bridgeAsk(sid,mode){
+  const t=prompt('向这个原始 DSH 会话下发什么指令？（低风险走官方 followup；高风险自动转审批）');
+  if(!t||!t.trim())return;
+  post('/api/bridge/command',{session_id:sid,mode:mode,text:t.trim()}).then(r=>{
+    toast(r.message||r.status||'已下发'); setTimeout(loadSessions,900);
+  });
+}
+function bridgeLink(sid){
+  const el=$('link-'+sid); if(!el)return;
+  post('/api/bridge/link',{session_id:sid,project_id:el.value}).then(()=>{toast('归属已确认');loadSessions()});
 }
 
 /* ───────── ① AI 总管每日简报（真实数据 · 规则引擎保底 · 缓存） ───────── */

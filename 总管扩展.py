@@ -42,6 +42,7 @@ LLM_URL = "http://127.0.0.1:7864/v1/chat/completions"
 LLM_MODEL = "glm-5.3-flash"
 
 _auto_lock = threading.Lock()
+BRG = None
 
 EXTRA_SCHEMA = """
 CREATE TABLE IF NOT EXISTS chat_messages(
@@ -74,7 +75,7 @@ QUERY = re.compile(
 
 def install(ns):
     """把主模块的工具函数注入本模块，并幂等建立新表（旧表一字不动）。"""
-    global G, ENG
+    global G, ENG, BRG
     G = ns
     with G["_lock"], G["conn"]() as c:
         c.executescript(EXTRA_SCHEMA)
@@ -82,7 +83,11 @@ def install(ns):
     import 总管进度引擎 as eng
     eng.install(ns, sys.modules[__name__])
     ENG = eng
-    G["emit"]("ext.install", "交互升级扩展已挂载：chat / gantt / auto-runs / dsh-headless / 进度引擎", "ok")
+    # P0–P3 DSH 原生桥接（事件接收 / 会话索引 / 指令队列 / 原会话接续）
+    import 总管桥接 as brg
+    brg.install(ns)
+    BRG = brg
+    G["emit"]("ext.install", "交互升级扩展已挂载：chat / gantt / auto-runs / dsh-headless / 进度引擎 / DSH 原生桥接", "ok")
 
 
 # ────────────────────────────── 凭据 / 模型 ──────────────────────────────
@@ -726,6 +731,12 @@ def auto_advance_cycle(trigger="patrol", max_per_round=2):
 # ────────────────────────────── 路由接管 ──────────────────────────────
 def handle_get(handler, path):
     """返回 True = 已处理，主模块 do_GET 直接 return。raw_path 带 query（第 3 参可选）。"""
+    if BRG is not None:
+        try:
+            if BRG.handle_get(handler, path, getattr(handler, "path", path)):
+                return True
+        except Exception as e:
+            G["emit"]("bridge.get.error", str(e), "error", data={"exc": traceback.format_exc()[:900]})
     if ENG is not None:
         try:
             if ENG.handle_get(handler, path, getattr(handler, "path", path)):
@@ -767,6 +778,12 @@ def handle_get(handler, path):
 
 
 def handle_post(handler, path, body):
+    if BRG is not None:
+        try:
+            if BRG.handle_post(handler, path, body):
+                return True
+        except Exception as e:
+            G["emit"]("bridge.post.error", str(e), "error", data={"exc": traceback.format_exc()[:900]})
     if ENG is not None:
         try:
             if ENG.handle_post(handler, path, body):

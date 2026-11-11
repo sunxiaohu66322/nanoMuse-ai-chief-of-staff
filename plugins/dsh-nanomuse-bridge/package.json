@@ -1,0 +1,13 @@
+{
+  "name": "dsh-nanomuse-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH 原生会话事件桥：session/event → nanoMuse 9196 增量推送 + 原会话 followup/steer 控制面",
+  "main": "index.js",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

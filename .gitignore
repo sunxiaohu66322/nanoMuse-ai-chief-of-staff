@@ -23,6 +23,14 @@ data/结构化证据-*.md
 data/结构化证据提取报告-*.md
 data/自动复核-*.md
 _启动诊断-*.txt
+data/_v5_*.py
+data/_v5_*.json
+
+# P0 桥接运行时缓存：插件 outbox（未送达事件）与插件日志，属运行态，不入库
+data/bridge-cache/
+
+# v3 中间轮验收截图（每轮多次运行产生的中间产物，非最终交付；最终交付用 v4/v5-*.png）
+验收/v3-*.png
 
 # 本地日志与临时文件
 logs/
